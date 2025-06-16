@@ -1,7 +1,7 @@
 import api from "./axios";
 
 export const checkinBookingByMember = async (memberId: string, staffName: string) => {
-  const res = await api.post(`/api/bookings/checkin-by-member/${memberId}`, {
+  const res = await api.post(`/bookings/checkin-by-member/${memberId}`, {
     staff_checked_by: staffName,
   });
   return res.data;
@@ -24,12 +24,12 @@ export const createBooking = async (data: {
     is_leader: boolean;
   }[];
 }) => {
-  const res = await api.post("/api/bookings", data);
+  const res = await api.post("/bookings", data);
   return res.data;
 };
 
 export const getTodayBookings = async () => {
-  const res = await api.get("/api/bookings/today");
+  const res = await api.get("/bookings/today");
   return res.data;
 };
 

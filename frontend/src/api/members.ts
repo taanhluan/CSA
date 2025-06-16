@@ -7,7 +7,7 @@ export const createMember = async (data: {
   email?: string;
   type?: "regular" | "vip";
 }) => {
-  const res = await api.post("/api/members", {
+  const res = await api.post("/members", {
     ...data,
     type: data.type || "regular",
   });
@@ -16,19 +16,19 @@ export const createMember = async (data: {
 
 // Lấy danh sách hội viên
 export const getMembers = async () => {
-  const res = await api.get("/api/members");
+  const res = await api.get("/members");
   return res.data;
 };
 
 // Vô hiệu hóa hội viên (xóa mềm)
 export const deactivateMember = async (id: string) => {
-  const res = await api.delete(`/api/members/${id}`);
+  const res = await api.delete(`/members/${id}`);
   return res.data;
 };
 
 // ✅ Toggle trạng thái hoạt động
 export const toggleMemberStatus = async (id: string, newStatus: boolean) => {
-  const res = await api.patch(`/api/members/${id}`, { is_active: newStatus });
+  const res = await api.patch(`/members/${id}`, { is_active: newStatus });
   return res.data;
 };
 
