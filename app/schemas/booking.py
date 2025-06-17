@@ -1,35 +1,50 @@
 from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 from uuid import UUID
 from datetime import datetime
 from enum import Enum
 
-# Enum: Loại booking
+# ------------------------------
+# ENUMS
+# ------------------------------
+
 class BookingType(str, Enum):
     individual = "individual"
     group = "group"
 
-# Enum: Trạng thái booking
 class BookingStatus(str, Enum):
     booked = "booked"
     checked_in = "checked-in"
     done = "done"
 
-# Cấu trúc người chơi khi tạo booking
+# ------------------------------
+# PLAYER SCHEMAS
+# ------------------------------
+
 class PlayerInput(BaseModel):
     player_name: str
     is_leader: Optional[bool] = False
 
-# Schema tạo booking mới
+class BookingPlayerSchema(BaseModel):
+    player_name: str
+    is_leader: bool
+
+    class Config:
+        orm_mode = True
+
+# ------------------------------
+# BOOKING SCHEMAS
+# ------------------------------
+
 class BookingCreate(BaseModel):
-    member_id: Optional[UUID] = None  # có thể gán nếu có hội viên
+    member_id: Optional[UUID] = None  # Optional for walk-in
     type: BookingType
     date_time: datetime
     duration: int
     deposit_amount: Optional[float] = None
     players: List[PlayerInput]
 
-# Schema phản hồi booking (khi trả về)
 class BookingResponse(BaseModel):
     id: UUID
     member_id: Optional[UUID]
@@ -40,9 +55,15 @@ class BookingResponse(BaseModel):
     deposit_amount: Optional[float]
     created_at: datetime
 
-    class Config:
-        orm_mode = True
+    # ✅ Trả về danh sách người chơi
+    players: List[BookingPlayerSchema] = []
 
-# Schema cho Checkin
+    # ✅ Cấu hình cho Pydantic V2 (thay cho orm_mode = True)
+    model_config = ConfigDict(from_attributes=True)
+
+# ------------------------------
+# CHECK-IN / CHECK-OUT
+# ------------------------------
+
 class CheckinInput(BaseModel):
     staff_checked_by: str

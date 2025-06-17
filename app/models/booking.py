@@ -1,27 +1,33 @@
 from sqlalchemy import Column, String, Integer, Enum, ForeignKey, DateTime, Numeric, Boolean
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 import uuid
 import enum
 from app.database import Base
 from datetime import datetime
 
-# Loại booking: cá nhân hay nhóm
+# ------------------------------
+# ENUMS
+# ------------------------------
+
 class BookingType(str, enum.Enum):
     individual = "individual"
     group = "group"
 
-# Trạng thái booking
 class BookingStatus(str, enum.Enum):
     booked = "booked"
     checked_in = "checked-in"
     done = "done"
 
-# Bảng Booking chính
+# ------------------------------
+# MAIN BOOKING TABLE
+# ------------------------------
+
 class Booking(Base):
     __tablename__ = "bookings"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    member_id = Column(UUID(as_uuid=True), ForeignKey("members.id"), nullable=True)  # 👈 gắn hội viên
+    member_id = Column(UUID(as_uuid=True), ForeignKey("members.id"), nullable=True)
     type = Column(Enum(BookingType), nullable=False)
     date_time = Column(DateTime, nullable=False)
     duration = Column(Integer, nullable=False)
@@ -29,7 +35,24 @@ class Booking(Base):
     deposit_amount = Column(Numeric, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-# Danh sách người chơi trong booking
+    # 👥 Liên kết đến danh sách người chơi
+    players = relationship(
+        "BookingPlayer",
+        back_populates="booking",
+        cascade="all, delete-orphan"
+    )
+
+    # 📒 Liên kết đến checkin log
+    checkin_logs = relationship(
+        "CheckinLog",
+        back_populates="booking",
+        cascade="all, delete-orphan"
+    )
+
+# ------------------------------
+# PLAYER PER BOOKING
+# ------------------------------
+
 class BookingPlayer(Base):
     __tablename__ = "booking_players"
 
@@ -38,7 +61,12 @@ class BookingPlayer(Base):
     player_name = Column(String)
     is_leader = Column(Boolean, default=False)
 
-# Lưu log checkin / checkout
+    booking = relationship("Booking", back_populates="players")
+
+# ------------------------------
+# CHECKIN / CHECKOUT LOG
+# ------------------------------
+
 class CheckinLog(Base):
     __tablename__ = "checkin_logs"
 
@@ -47,3 +75,5 @@ class CheckinLog(Base):
     checkin_time = Column(DateTime, default=datetime.utcnow)
     checkout_time = Column(DateTime, nullable=True)
     staff_checked_by = Column(String)
+
+    booking = relationship("Booking", back_populates="checkin_logs")

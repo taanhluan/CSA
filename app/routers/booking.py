@@ -1,7 +1,8 @@
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from uuid import uuid4, UUID
-from datetime import datetime, date
+from datetime import datetime
 
 from app.database import SessionLocal
 from app.models.booking import Booking, BookingPlayer, CheckinLog, BookingStatus
@@ -17,7 +18,9 @@ def get_db():
     finally:
         db.close()
 
-# API: Tạo booking mới
+# ------------------------------
+# Tạo booking mới
+# ------------------------------
 @router.post("/", response_model=BookingResponse)
 def create_booking(data: BookingCreate, db: Session = Depends(get_db)):
     booking = Booking(
@@ -29,22 +32,23 @@ def create_booking(data: BookingCreate, db: Session = Depends(get_db)):
         deposit_amount=data.deposit_amount,
     )
     db.add(booking)
-    db.flush()  # booking.id phải có trước khi thêm players
+    db.flush()  # cần id booking cho player
 
     for p in data.players:
-        player = BookingPlayer(
+        db.add(BookingPlayer(
             id=uuid4(),
             booking_id=booking.id,
             player_name=p.player_name,
             is_leader=p.is_leader
-        )
-        db.add(player)
+        ))
 
     db.commit()
     db.refresh(booking)
     return booking
 
-# API: Check-in theo booking_id
+# ------------------------------
+# Check-in theo booking_id
+# ------------------------------
 @router.post("/{booking_id}/checkin")
 def checkin(booking_id: UUID, checkin: CheckinInput, db: Session = Depends(get_db)):
     booking = db.query(Booking).get(booking_id)
@@ -59,35 +63,34 @@ def checkin(booking_id: UUID, checkin: CheckinInput, db: Session = Depends(get_d
     db.commit()
     return {"message": "Checked in"}
 
-# API: Check-in theo member_id (lấy booking gần nhất chưa check-in)
+# ------------------------------
+# Check-in theo member_id
+# ------------------------------
 @router.post("/checkin-by-member/{member_id}")
-def checkin_latest_by_member(member_id: UUID, checkin: CheckinInput, db: Session = Depends(get_db)):
-    latest_booking = (
+def checkin_by_member(member_id: UUID, checkin: CheckinInput, db: Session = Depends(get_db)):
+    latest = (
         db.query(Booking)
         .filter(Booking.member_id == member_id, Booking.status == BookingStatus.booked)
         .order_by(Booking.date_time.desc())
         .first()
     )
+    if not latest:
+        raise HTTPException(status_code=404, detail="No active booking found")
 
-    if not latest_booking:
-        raise HTTPException(status_code=404, detail="No active booking found for member")
-
-    latest_booking.status = BookingStatus.checked_in
-    db.add(CheckinLog(
-        booking_id=latest_booking.id,
-        staff_checked_by=checkin.staff_checked_by
-    ))
+    latest.status = BookingStatus.checked_in
+    db.add(CheckinLog(booking_id=latest.id, staff_checked_by=checkin.staff_checked_by))
     db.commit()
-    return {"message": f"Checked in booking {latest_booking.id}"}
+    return {"message": f"Checked in booking {latest.id}"}
 
-# API: Checkout
+# ------------------------------
+# Checkout
+# ------------------------------
 @router.post("/{booking_id}/checkout")
 def checkout(booking_id: UUID, db: Session = Depends(get_db)):
     log = db.query(CheckinLog).filter(
         CheckinLog.booking_id == booking_id,
         CheckinLog.checkout_time == None
     ).first()
-
     if not log:
         raise HTTPException(status_code=404, detail="No check-in found")
 
@@ -97,9 +100,24 @@ def checkout(booking_id: UUID, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Checked out"}
 
-# API: Lấy danh sách booking hôm nay
-@router.get("/today", response_model=list[BookingResponse])
-def get_today_bookings(db: Session = Depends(get_db)):
-    start = datetime.combine(date.today(), datetime.min.time())
-    end = datetime.combine(date.today(), datetime.max.time())
-    return db.query(Booking).filter(Booking.date_time.between(start, end)).all()
+# ------------------------------
+# Lấy danh sách booking theo ngày (yyyy-mm-dd)
+# ------------------------------
+@router.get("/by-date", response_model=List[BookingResponse])
+def get_bookings_by_date(date_str: str, db: Session = Depends(get_db)):
+    try:
+        target_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+    except:
+        raise HTTPException(status_code=400, detail="Invalid date format. Use yyyy-mm-dd")
+
+    start = datetime.combine(target_date, datetime.min.time())
+    end = datetime.combine(target_date, datetime.max.time())
+
+    bookings = (
+        db.query(Booking)
+        .options(joinedload(Booking.players))
+        .filter(Booking.date_time.between(start, end))
+        .order_by(Booking.date_time.asc())
+        .all()
+    )
+    return bookings
