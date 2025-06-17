@@ -1,7 +1,6 @@
-// BookingForm.tsx
 import { useEffect, useState } from "react";
 import { getMembers } from "../api/members";
-import { createBooking, getTodayBookings } from "../api/bookings";
+import { createBooking, getBookingsByDate } from "../api/bookings";
 import BookingSummary from "./BookingSummary";
 import toast from "react-hot-toast";
 
@@ -34,15 +33,25 @@ const BookingForm = () => {
   }, []);
 
   const loadBookings = async () => {
-    const all = await getTodayBookings();
-    setTodayBookings(all);
+    const vnDateStr = new Date().toLocaleDateString("en-CA", {
+      timeZone: "Asia/Ho_Chi_Minh",
+    });
+    try {
+      const bookings = await getBookingsByDate(vnDateStr);
+      console.log("📦 Booking by VN date:", bookings);
+      setTodayBookings(bookings);
+    } catch (error) {
+      console.error("❌ Lỗi khi load booking theo ngày:", error);
+    }
   };
 
   const handlePlayerChange = (index: number, key: keyof Player, value: string | boolean) => {
     const updated = [...players];
     updated[index] = { ...updated[index], [key]: value };
     if (key === "is_leader" && value === true) {
-      updated.forEach((p, i) => { if (i !== index) p.is_leader = false; });
+      updated.forEach((p, i) => {
+        if (i !== index) p.is_leader = false;
+      });
     }
     setPlayers(updated);
   };
@@ -90,10 +99,11 @@ const BookingForm = () => {
       <div className="xl:col-span-2 bg-white p-6 shadow-lg rounded-xl space-y-4">
         <h2 className="text-xl font-bold text-indigo-700">📝 Tạo booking mới</h2>
 
+        {/* Chọn hội viên */}
         <div>
           <label className="block font-medium mb-1">Chọn hội viên</label>
           <select
-            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-indigo-500"
+            className="w-full px-3 py-2 border rounded"
             value={selectedMemberId}
             onChange={(e) => setSelectedMemberId(e.target.value)}
           >
@@ -104,6 +114,7 @@ const BookingForm = () => {
           </select>
         </div>
 
+        {/* Loại & Thời lượng */}
         <div className="flex gap-4">
           <div className="w-1/2">
             <label className="block font-medium mb-1">Loại booking</label>
@@ -127,6 +138,7 @@ const BookingForm = () => {
           </div>
         </div>
 
+        {/* Ngày giờ & tiền cọc */}
         <div>
           <label className="block font-medium mb-1">Ngày & Giờ</label>
           <input
@@ -147,6 +159,7 @@ const BookingForm = () => {
           />
         </div>
 
+        {/* Danh sách người chơi */}
         <div className="space-y-2">
           <label className="block font-medium">Danh sách người chơi</label>
           {players.map((player, index) => (
@@ -177,6 +190,7 @@ const BookingForm = () => {
           </button>
         </div>
 
+        {/* Nút lưu */}
         <button
           className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded font-semibold transition disabled:opacity-50"
           onClick={handleSave}
@@ -185,6 +199,7 @@ const BookingForm = () => {
           {loading ? "Đang lưu..." : "💾 Lưu booking"}
         </button>
 
+        {/* Booking hôm nay */}
         <div className="bg-white rounded shadow p-4 mt-6">
           <h3 className="text-lg font-semibold text-indigo-700 mb-2">📅 Booking hôm nay</h3>
 
@@ -225,7 +240,22 @@ const BookingForm = () => {
                       {b.status}
                     </span>
                   </div>
-                  <div className="text-gray-500 text-xs">👤 {getMemberName(b.member_id)}</div>
+                  <div className="text-gray-500 text-xs">
+                    👤 {getMemberName(b.member_id)}
+                    {b.players?.length > 0 && (
+                      <>
+                        {" | "}
+                        👥{" "}
+                        {b.players.map((p: any, i: number) => (
+                          <span key={i}>
+                            {p.player_name}
+                            {p.is_leader ? " ⭐" : ""}
+                            {i < b.players.length - 1 ? ", " : ""}
+                          </span>
+                        ))}
+                      </>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>
@@ -233,7 +263,7 @@ const BookingForm = () => {
         </div>
       </div>
 
-      {/* Booking Summary */}
+      {/* Summary */}
       <div>
         {recentBooking && (
           <BookingSummary

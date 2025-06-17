@@ -1,4 +1,3 @@
-// BookingSummary.tsx
 import { useEffect, useState } from "react";
 import { SERVICE_CATALOG, ServiceItem } from "../constants/services";
 
@@ -63,6 +62,9 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
     (sum, item) => sum + item.quantity * item.unit_price,
     0
   );
+
+  const courtFee = booking.duration * 500;
+  const grandTotal = courtFee + totalAmount - booking.deposit_amount;
 
   return (
     <div className="border p-4 rounded-xl shadow bg-white mt-4">
@@ -152,6 +154,15 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
                 </table>
               </div>
             )}
+
+            <div className="mt-3 text-right text-sm text-gray-800">
+              <p>🏀 Tiền sân ({booking.duration} phút): <b>{courtFee.toLocaleString()}đ</b></p>
+              <p>➕ Dịch vụ: <b>{totalAmount.toLocaleString()}đ</b></p>
+              <p>➖ Tiền cọc: <b>-{booking.deposit_amount.toLocaleString()}đ</b></p>
+              <p className="text-lg font-bold text-indigo-700 mt-2">
+                💰 Tổng thanh toán: {grandTotal.toLocaleString()}đ
+              </p>
+            </div>
           </div>
         )}
       </div>
