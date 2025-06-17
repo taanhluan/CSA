@@ -112,7 +112,7 @@ def get_bookings_by_date(date_str: str, db: Session = Depends(get_db)):
 
     start = datetime.combine(target_date, datetime.min.time())
     end = datetime.combine(target_date, datetime.max.time())
-
+    print("📅 Querying from:", start, "to", end)  # ✅ Thêm dòng này
     bookings = (
         db.query(Booking)
         .options(joinedload(Booking.players))
