@@ -5,6 +5,7 @@ import Checkin from "../pages/Checkin";
 import Checkout from "../pages/Checkout";
 import Members from "../pages/Members";
 import BookingPage from "../pages/Booking";
+import ServiceAdminPage from "../components/ServiceAdminPage"; // ✅
 
 const AppRoutes = () => {
   return (
@@ -15,6 +16,7 @@ const AppRoutes = () => {
         <Route path="checkout" element={<Checkout />} />
         <Route path="members" element={<Members />} />
         <Route path="booking" element={<BookingPage />} />
+        <Route path="services" element={<ServiceAdminPage />} /> {/* ✅ Thêm dòng này */}
       </Route>
     </Routes>
   );

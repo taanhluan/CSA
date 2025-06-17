@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 from uuid import uuid4, UUID
 from datetime import datetime
+from datetime import datetime, time
 import pytz
 
 from app.database import SessionLocal
@@ -111,10 +112,11 @@ def get_bookings_by_date(date_str: str, db: Session = Depends(get_db)):
     except:
         raise HTTPException(status_code=400, detail="Invalid date format. Use yyyy-mm-dd")
 
+    # ✅ Áp dụng timezone Asia/Ho_Chi_Minh để xác định ngày hôm nay đúng
     tz = pytz.timezone("Asia/Ho_Chi_Minh")
-    start = tz.localize(datetime.combine(target_date, datetime.min.time())).astimezone(pytz.utc)
-    end = tz.localize(datetime.combine(target_date, datetime.max.time())).astimezone(pytz.utc)
-    print("📅 Querying from:", start, "to", end)  # ✅ Thêm dòng này
+    start = tz.localize(datetime.combine(target_date, time.min)).astimezone(pytz.utc)
+    end = tz.localize(datetime.combine(target_date, time.max)).astimezone(pytz.utc)
+
     bookings = (
         db.query(Booking)
         .options(joinedload(Booking.players))

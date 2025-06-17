@@ -80,6 +80,28 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
         <li>💵 <b>Tiền cọc:</b> {booking.deposit_amount.toLocaleString()} VNĐ</li>
       </ul>
 
+      {booking.players?.length > 0 && (
+        <div className="mt-4">
+          <h4 className="font-semibold text-sm text-gray-700 mb-2">👥 Danh sách người chơi:</h4>
+          <table className="w-full text-sm border rounded shadow-sm">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="text-left p-2">Tên người chơi</th>
+                <th className="text-left p-2">Leader</th>
+              </tr>
+            </thead>
+            <tbody>
+              {booking.players.map((p: any, i: number) => (
+                <tr key={i} className="border-t">
+                  <td className="p-2">{p.player_name}</td>
+                  <td className="p-2">{p.is_leader ? "⭐ Có" : "Không"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
       <div className="mt-4">
         <button
           className="text-sm text-blue-600 hover:underline"

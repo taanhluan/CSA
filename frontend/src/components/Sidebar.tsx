@@ -9,10 +9,14 @@ const Sidebar = () => {
         <Link to="/Booking" className="hover:bg-gray-700 px-3 py-2 rounded">Booking</Link>
         <Link to="/checkin" className="hover:bg-gray-700 px-3 py-2 rounded">Check-in</Link>
         <Link to="/checkout" className="hover:bg-gray-700 px-3 py-2 rounded">Checkout</Link>
-        <Link to="/members" className="hover:bg-gray-700 px-3 py-2 rounded">Members</Link> {/* ✅ THÊM DÒNG NÀY */}
+        <Link to="/members" className="hover:bg-gray-700 px-3 py-2 rounded">Members</Link>
+        
+        {/* ✅ THÊM DÒNG NÀY */}
+        <Link to="/services" className="hover:bg-gray-700 px-3 py-2 rounded">Dịch vụ</Link>
       </nav>
     </div>
   );
 };
 
 export default Sidebar;
+
