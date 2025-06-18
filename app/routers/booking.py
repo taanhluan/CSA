@@ -2,7 +2,6 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 from uuid import uuid4, UUID
-from datetime import datetime
 from datetime import datetime, time
 import pytz
 
@@ -34,7 +33,7 @@ def create_booking(data: BookingCreate, db: Session = Depends(get_db)):
         deposit_amount=data.deposit_amount,
     )
     db.add(booking)
-    db.flush()  # cần id booking cho player
+    db.flush()
 
     for p in data.players:
         db.add(BookingPlayer(
@@ -103,6 +102,19 @@ def checkout(booking_id: UUID, db: Session = Depends(get_db)):
     return {"message": "Checked out"}
 
 # ------------------------------
+# ✅ Hoàn tất thanh toán — cập nhật trạng thái booking thành "done"
+# ------------------------------
+@router.post("/{booking_id}/complete")
+def complete_booking(booking_id: UUID, db: Session = Depends(get_db)):
+    booking = db.query(Booking).get(booking_id)
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+
+    booking.status = BookingStatus.done
+    db.commit()
+    return {"message": "Booking marked as done"}
+
+# ------------------------------
 # Lấy danh sách booking theo ngày (yyyy-mm-dd)
 # ------------------------------
 @router.get("/by-date", response_model=List[BookingResponse])
@@ -112,7 +124,6 @@ def get_bookings_by_date(date_str: str, db: Session = Depends(get_db)):
     except:
         raise HTTPException(status_code=400, detail="Invalid date format. Use yyyy-mm-dd")
 
-    # ✅ Áp dụng timezone Asia/Ho_Chi_Minh để xác định ngày hôm nay đúng
     tz = pytz.timezone("Asia/Ho_Chi_Minh")
     start = tz.localize(datetime.combine(target_date, time.min)).astimezone(pytz.utc)
     end = tz.localize(datetime.combine(target_date, time.max)).astimezone(pytz.utc)
@@ -125,3 +136,16 @@ def get_bookings_by_date(date_str: str, db: Session = Depends(get_db)):
         .all()
     )
     return bookings
+
+# ------------------------------
+# Hoàn tất thanh toán (update status = done)
+# ------------------------------
+@router.post("/{booking_id}/complete")
+def complete_booking(booking_id: UUID, db: Session = Depends(get_db)):
+    booking = db.query(Booking).get(booking_id)
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    booking.status = BookingStatus.done
+    db.commit()
+    return {"message": "Booking marked as done"}

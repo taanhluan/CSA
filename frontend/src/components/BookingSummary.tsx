@@ -58,36 +58,47 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
     );
   };
 
-  const totalAmount = services.reduce(
+  const courtFee = booking.duration * 500;
+  const servicesTotal = services.reduce(
     (sum, item) => sum + item.quantity * item.unit_price,
     0
   );
+  const grandTotal = courtFee + servicesTotal - booking.deposit_amount;
 
-  const courtFee = booking.duration * 500;
-  const grandTotal = courtFee + totalAmount - booking.deposit_amount;
+  const handleCompleteBooking = async () => {
+    try {
+      await fetch(`https://csa-backend-v90k.onrender.com/api/bookings/${booking.id}/complete`, {
+        method: "POST",
+      });
+      alert("✅ Booking đã được cập nhật trạng thái!");
+    } catch (err) {
+      alert("❌ Không thể cập nhật trạng thái");
+    }
+  };
 
   return (
     <div className="border p-4 rounded-xl shadow bg-white mt-4">
-      <h3 className="text-xl font-bold text-indigo-700 mb-2 flex items-center gap-2">
-        📄 Booking
+      <h3 className="text-xl font-bold text-indigo-700 mb-3 flex items-center gap-2">
+        📄 Thông tin Booking
       </h3>
 
-      <ul className="space-y-1 text-sm text-gray-800">
-        <li>⏰ <b>Thời gian:</b> {new Date(booking.date_time).toLocaleString("vi-VN")}</li>
-        <li>🙍 <b>Hội viên:</b> {memberName}</li>
-        <li>🔖 <b>Loại:</b> {booking.type}</li>
-        <li>🕒 <b>Thời lượng:</b> {booking.duration} phút</li>
-        <li>💵 <b>Tiền cọc:</b> {booking.deposit_amount.toLocaleString()} VNĐ</li>
-      </ul>
+      <div className="text-sm space-y-1 text-gray-800">
+        <p>⏰ <b>Thời gian:</b> {new Date(booking.date_time).toLocaleString("vi-VN")}</p>
+        <p>🙍 <b>Hội viên:</b> {memberName}</p>
+        <p>🔖 <b>Loại:</b> {booking.type}</p>
+        <p>🕒 <b>Thời lượng:</b> {booking.duration} phút</p>
+        <p>💵 <b>Tiền cọc:</b> {booking.deposit_amount.toLocaleString()} VNĐ</p>
+      </div>
 
+      {/* Người chơi */}
       {booking.players?.length > 0 && (
         <div className="mt-4">
           <h4 className="font-semibold text-sm text-gray-700 mb-2">👥 Danh sách người chơi:</h4>
-          <table className="w-full text-sm border rounded shadow-sm">
+          <table className="w-full text-sm border rounded">
             <thead className="bg-gray-100">
               <tr>
-                <th className="text-left p-2">Tên người chơi</th>
-                <th className="text-left p-2">Leader</th>
+                <th className="p-2 text-left">Tên người chơi</th>
+                <th className="p-2 text-left">Leader</th>
               </tr>
             </thead>
             <tbody>
@@ -102,7 +113,8 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
         </div>
       )}
 
-      <div className="mt-4">
+      {/* Dịch vụ */}
+      <div className="mt-5">
         <button
           className="text-sm text-blue-600 hover:underline"
           onClick={() => setShowServices(!showServices)}
@@ -139,55 +151,58 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
             </div>
 
             {services.length > 0 && (
-              <div className="overflow-auto">
-                <table className="w-full text-sm mt-3 border rounded shadow-sm">
-                  <thead className="bg-gray-100 text-left">
-                    <tr>
-                      <th className="p-2">Dịch vụ</th>
-                      <th className="p-2 text-center">Số lượng</th>
-                      <th className="p-2 text-right">Đơn giá</th>
-                      <th className="p-2 text-right">Thành tiền</th>
+              <table className="w-full text-sm mt-3 border rounded shadow-sm">
+                <thead className="bg-gray-100 text-left">
+                  <tr>
+                    <th className="p-2">Dịch vụ</th>
+                    <th className="p-2 text-center">Số lượng</th>
+                    <th className="p-2 text-right">Đơn giá</th>
+                    <th className="p-2 text-right">Thành tiền</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {services.map((s) => (
+                    <tr key={s.id} className="border-t">
+                      <td className="p-2">{s.name}</td>
+                      <td className="p-2 text-center">
+                        <input
+                          type="number"
+                          className="w-14 border rounded px-1 text-center"
+                          value={s.quantity}
+                          min={1}
+                          onChange={(e) => updateQuantity(s.id, Number(e.target.value))}
+                        />
+                      </td>
+                      <td className="p-2 text-right">{s.unit_price.toLocaleString()}đ</td>
+                      <td className="p-2 text-right">{(s.quantity * s.unit_price).toLocaleString()}đ</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {services.map((s) => (
-                      <tr key={s.id} className="border-t">
-                        <td className="p-2">{s.name}</td>
-                        <td className="p-2 text-center">
-                          <input
-                            type="number"
-                            className="w-14 border rounded px-1 text-center"
-                            value={s.quantity}
-                            min={1}
-                            onChange={(e) => updateQuantity(s.id, Number(e.target.value))}
-                          />
-                        </td>
-                        <td className="p-2 text-right">{s.unit_price.toLocaleString()}đ</td>
-                        <td className="p-2 text-right">{(s.quantity * s.unit_price).toLocaleString()}đ</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr className="font-bold border-t bg-white">
-                      <td colSpan={3} className="p-2 text-right">Tổng cộng:</td>
-                      <td className="p-2 text-right text-green-700">{totalAmount.toLocaleString()}đ</td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
+                  ))}
+                </tbody>
+              </table>
             )}
-
-            <div className="mt-3 text-right text-sm text-gray-800">
-              <p>🏀 Tiền sân ({booking.duration} phút): <b>{courtFee.toLocaleString()}đ</b></p>
-              <p>➕ Dịch vụ: <b>{totalAmount.toLocaleString()}đ</b></p>
-              <p>➖ Tiền cọc: <b>-{booking.deposit_amount.toLocaleString()}đ</b></p>
-              <p className="text-lg font-bold text-indigo-700 mt-2">
-                💰 Tổng thanh toán: {grandTotal.toLocaleString()}đ
-              </p>
-            </div>
           </div>
         )}
       </div>
+
+      {/* Tổng kết */}
+      <div className="mt-6 text-right text-sm text-gray-800 space-y-1 border-t pt-4">
+        <p>🏀 Tiền sân ({booking.duration} phút): <b>{courtFee.toLocaleString()}đ</b></p>
+        <p>➕ Dịch vụ: <b>{servicesTotal.toLocaleString()}đ</b></p>
+        <p>➖ Tiền cọc: <b>-{booking.deposit_amount.toLocaleString()}đ</b></p>
+        <p className="text-lg font-bold text-indigo-700 mt-2">
+          💰 Tổng thanh toán: {grandTotal.toLocaleString()}đ
+        </p>
+      </div>
+
+      {/* Thanh toán */}
+      {booking.status !== "done" && (
+        <button
+          onClick={handleCompleteBooking}
+          className="mt-6 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm font-semibold"
+        >
+          ✅ Hoàn tất thanh toán
+        </button>
+      )}
     </div>
   );
 };

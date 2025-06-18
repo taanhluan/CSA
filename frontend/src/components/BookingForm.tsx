@@ -26,22 +26,23 @@ const BookingForm = () => {
   const [recentBooking, setRecentBooking] = useState<any | null>(null);
   const [todayBookings, setTodayBookings] = useState<any[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10)); // ✅ NEW
 
   useEffect(() => {
     getMembers().then(setMembers).catch(() => toast.error("❌ Lỗi khi lấy danh sách hội viên"));
-    loadBookings();
   }, []);
 
+  useEffect(() => {
+    loadBookings();
+  }, [selectedDate]);
+
   const loadBookings = async () => {
-    const vnDateStr = new Date().toLocaleDateString("en-CA", {
-      timeZone: "Asia/Ho_Chi_Minh",
-    });
     try {
-      const bookings = await getBookingsByDate(vnDateStr);
-      console.log("📦 Booking by VN date:", bookings);
+      const bookings = await getBookingsByDate(selectedDate);
       setTodayBookings(bookings);
     } catch (error) {
-      console.error("❌ Lỗi khi load booking theo ngày:", error);
+      console.error("❌ Lỗi khi load booking:", error);
+      setTodayBookings([]);
     }
   };
 
@@ -199,22 +200,39 @@ const BookingForm = () => {
           {loading ? "Đang lưu..." : "💾 Lưu booking"}
         </button>
 
-        {/* Booking hôm nay */}
+        {/* Booking theo ngày */}
         <div className="bg-white rounded shadow p-4 mt-6">
-          <h3 className="text-lg font-semibold text-indigo-700 mb-2">📅 Booking hôm nay</h3>
+          <h3 className="text-lg font-semibold text-indigo-700 mb-2">📅 Booking theo ngày</h3>
 
-          <div className="mb-3">
-            <label className="text-sm mr-2">Lọc theo trạng thái:</label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="border px-2 py-1 text-sm rounded"
+          <div className="flex items-center gap-3 mb-3">
+            <div>
+              <label className="text-sm mr-2">Chọn ngày:</label>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="border px-2 py-1 text-sm rounded"
+              />
+            </div>
+            <div>
+              <label className="text-sm mr-2">Trạng thái:</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="border px-2 py-1 text-sm rounded"
+              >
+                <option value="">Tất cả</option>
+                <option value="booked">Đã đặt</option>
+                <option value="checked-in">Đã check-in</option>
+                <option value="done">Hoàn tất</option>
+              </select>
+            </div>
+            <button
+              onClick={() => setSelectedDate(new Date().toISOString().slice(0, 10))}
+              className="text-xs text-blue-600 hover:underline"
             >
-              <option value="">Tất cả</option>
-              <option value="booked">Đã đặt</option>
-              <option value="checked-in">Đã check-in</option>
-              <option value="done">Hoàn tất</option>
-            </select>
+              🔁 Quay về hôm nay
+            </button>
           </div>
 
           {filteredBookings.length === 0 ? (
@@ -231,14 +249,9 @@ const BookingForm = () => {
                     <span>
                       🕐 {new Date(b.date_time).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", hour12: false })}
                       {" | "}⏱ {b.duration} phút {" | "}💰 {b.deposit_amount?.toLocaleString()}đ
-                    </span>
-                    <span className={`text-xs px-2 py-0.5 rounded ${
-                      b.status === 'booked' ? 'bg-yellow-100 text-yellow-800' :
-                      b.status === 'checked-in' ? 'bg-blue-100 text-blue-800' :
-                      'bg-green-100 text-green-800'
-                    }`}>
-                      {b.status}
-                    </span>
+                    </span> 
+                    {b.status === "booked" && <span className="text-yellow-800 bg-yellow-100 text-xs px-2 py-0.5 rounded">Chưa thanh toán</span>}
+                    {b.status === "done" && <span className="text-green-800 bg-green-100 text-xs px-2 py-0.5 rounded">Đã thanh toán</span>}
                   </div>
                   <div className="text-gray-500 text-xs">
                     👤 {getMemberName(b.member_id)}
