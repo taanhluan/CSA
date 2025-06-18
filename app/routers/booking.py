@@ -4,12 +4,16 @@ from sqlalchemy.orm import Session, joinedload
 from uuid import uuid4, UUID
 from datetime import datetime, time
 import pytz
+import logging
 
 from app.database import SessionLocal
 from app.models.booking import Booking, BookingPlayer, CheckinLog, BookingStatus
 from app.schemas.booking import BookingCreate, BookingResponse, CheckinInput
 
 router = APIRouter(prefix="/bookings", tags=["Bookings"])
+
+# Logger setup
+logger = logging.getLogger(__name__)
 
 # Dependency: tạo session DB
 def get_db():
@@ -102,19 +106,6 @@ def checkout(booking_id: UUID, db: Session = Depends(get_db)):
     return {"message": "Checked out"}
 
 # ------------------------------
-# ✅ Hoàn tất thanh toán — cập nhật trạng thái booking thành "done"
-# ------------------------------
-@router.post("/{booking_id}/complete")
-def complete_booking(booking_id: UUID, db: Session = Depends(get_db)):
-    booking = db.query(Booking).get(booking_id)
-    if not booking:
-        raise HTTPException(status_code=404, detail="Booking not found")
-
-    booking.status = BookingStatus.done
-    db.commit()
-    return {"message": "Booking marked as done"}
-
-# ------------------------------
 # Lấy danh sách booking theo ngày (yyyy-mm-dd)
 # ------------------------------
 @router.get("/by-date", response_model=List[BookingResponse])
@@ -138,14 +129,19 @@ def get_bookings_by_date(date_str: str, db: Session = Depends(get_db)):
     return bookings
 
 # ------------------------------
-# Hoàn tất thanh toán (update status = done)
+# ✅ Hoàn tất thanh toán (update status = done)
 # ------------------------------
 @router.post("/{booking_id}/complete")
 def complete_booking(booking_id: UUID, db: Session = Depends(get_db)):
-    booking = db.query(Booking).get(booking_id)
-    if not booking:
-        raise HTTPException(status_code=404, detail="Booking not found")
-    
-    booking.status = BookingStatus.done
-    db.commit()
-    return {"message": "Booking marked as done"}
+    try:
+        booking = db.query(Booking).get(booking_id)
+        if not booking:
+            raise HTTPException(status_code=404, detail="Booking not found")
+
+        logger.info(f"🔄 Updating booking {booking.id} status from {booking.status} → done")
+        booking.status = BookingStatus.done  # hoặc .done.value nếu column là String
+        db.commit()
+        return {"message": "Booking marked as done"}
+    except Exception as e:
+        logger.error(f"❌ Error completing booking {booking_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")

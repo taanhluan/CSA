@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { SERVICE_CATALOG, ServiceItem } from "../constants/services";
+import toast from "react-hot-toast";
 
 interface BookingSummaryProps {
   booking: any;
@@ -65,16 +66,16 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
   );
   const grandTotal = courtFee + servicesTotal - booking.deposit_amount;
 
-  const handleCompleteBooking = async () => {
-    try {
-      await fetch(`https://csa-backend-v90k.onrender.com/api/bookings/${booking.id}/complete`, {
-        method: "POST",
-      });
-      alert("✅ Booking đã được cập nhật trạng thái!");
-    } catch (err) {
-      alert("❌ Không thể cập nhật trạng thái");
-    }
-  };
+const handleCompleteBooking = async () => {
+  try {
+    await fetch(`https://csa-backend-v90k.onrender.com/api/bookings/${booking.id}/complete`, {
+      method: "POST",
+    });
+    toast.success("✅ Booking đã được cập nhật trạng thái!");
+  } catch (err) {
+    toast.error("❌ Không thể cập nhật trạng thái");
+  }
+};
 
   return (
     <div className="border p-4 rounded-xl shadow bg-white mt-4">
