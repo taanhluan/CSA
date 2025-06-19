@@ -1,33 +1,42 @@
 import { useEffect, useState } from "react";
-import { SERVICE_CATALOG, ServiceItem } from "../constants/services";
+
+interface ServiceItem {
+  id: string;
+  name: string;
+  unit_price: number;
+}
 
 const ServiceAdminPage = () => {
   const [services, setServices] = useState<ServiceItem[]>([]);
-  const [newService, setNewService] = useState({ id: "", name: "", unit_price: 0 });
+  const [newService, setNewService] = useState<ServiceItem>({
+    id: "",
+    name: "",
+    unit_price: 0,
+  });
 
   const storageKey = "service_catalog";
 
-  // Fetch từ backend
+  // ✅ Load data từ backend (hoặc local nếu lỗi)
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const res = await fetch("https://csa-backend-v90k.onrender.com/api/services");
+        const res = await fetch("https://csa-backend-v90k.onrender.com/api/services/");
         const data = await res.json();
 
         if (Array.isArray(data)) {
           setServices(data);
         } else if (Array.isArray(data.data)) {
-          setServices(data.data); // nếu backend trả kiểu { data: [...] }
+          setServices(data.data);
         } else {
-          throw new Error("Dữ liệu không hợp lệ");
+          throw new Error("❌ Dữ liệu không hợp lệ");
         }
       } catch (err) {
-        console.error("❌ Lỗi khi gọi API:", err);
+        console.error("❌ Lỗi gọi API, dùng local:", err);
         const stored = localStorage.getItem(storageKey);
         if (stored) {
           setServices(JSON.parse(stored));
         } else {
-          setServices(SERVICE_CATALOG);
+          setServices([]);
         }
       }
     };
@@ -35,24 +44,13 @@ const ServiceAdminPage = () => {
     fetchServices();
   }, []);
 
-  // Sync localStorage + backend
-  useEffect(() => {
-    if (services.length === 0) return;
-
-    localStorage.setItem(storageKey, JSON.stringify(services));
-
-    fetch("https://csa-backend-v90k.onrender.com/api/services", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(services),
-    }).then((res) => {
-      if (!res.ok) console.error("❌ Sync backend thất bại");
-    });
-  }, [services]);
-
+  // ✅ Thêm dòng mới
   const handleAdd = () => {
     if (!newService.id.trim() || !newService.name.trim()) return;
-    if (services.find((s) => s.id === newService.id)) return alert("❌ ID đã tồn tại");
+    if (services.find((s) => s.id === newService.id)) {
+      alert("❌ ID đã tồn tại");
+      return;
+    }
 
     setServices([...services, newService]);
     setNewService({ id: "", name: "", unit_price: 0 });
@@ -62,21 +60,33 @@ const ServiceAdminPage = () => {
     setServices(services.filter((s) => s.id !== id));
   };
 
-  const handleChange = (index: number, key: keyof ServiceItem, value: string | number) => {
+  const handleChange = (
+    index: number,
+    key: keyof ServiceItem,
+    value: string | number
+  ) => {
     const updated = [...services];
-    (updated[index] as Record<string, any>)[key] = key === "unit_price" ? Number(value) : value;
+    (updated[index] as any)[key] = key === "unit_price" ? Number(value) : value;
     setServices(updated);
   };
 
-  const exportJSON = () => {
-    const blob = new Blob([JSON.stringify(services, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "services.json";
-    a.click();
+  // ✅ Gửi toàn bộ danh sách về DB
+  const handleSave = async () => {
+    try {
+      const res = await fetch("https://csa-backend-v90k.onrender.com/api/services/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(services),
+      });
+
+      if (!res.ok) throw new Error("Lỗi khi lưu");
+
+      alert("✅ Lưu danh sách dịch vụ thành công!");
+      localStorage.setItem(storageKey, JSON.stringify(services));
+    } catch (err) {
+      alert("❌ Không thể lưu xuống backend");
+      console.error(err);
+    }
   };
 
   return (
@@ -113,7 +123,9 @@ const ServiceAdminPage = () => {
                 <input
                   type="number"
                   value={s.unit_price}
-                  onChange={(e) => handleChange(index, "unit_price", Number(e.target.value))}
+                  onChange={(e) =>
+                    handleChange(index, "unit_price", Number(e.target.value))
+                  }
                   className="w-full border px-1 py-1 rounded text-right"
                 />
               </td>
@@ -166,12 +178,13 @@ const ServiceAdminPage = () => {
         </tbody>
       </table>
 
+      {/* ✅ Nút Lưu */}
       <div className="mt-4 text-right">
         <button
-          onClick={exportJSON}
+          onClick={handleSave}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm"
         >
-          ⬇️ Xuất JSON
+          💾 Lưu
         </button>
       </div>
     </div>

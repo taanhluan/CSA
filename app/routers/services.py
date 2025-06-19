@@ -1,28 +1,33 @@
-# app/routers/services.py
-
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 from typing import List
-from pydantic import BaseModel
+from app.database import SessionLocal
+from app.models.service import Service  # ✅ Sửa path chính xác
+from app.schemas.services import ServiceItem, ServiceCreate
 
-router = APIRouter(prefix="/api", tags=["Services"])
+router = APIRouter(prefix="/api/services", tags=["Services"])
 
-class ServiceItem(BaseModel):
-    id: str
-    name: str
-    unit_price: int
+# Dependency: lấy session database
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-# Dữ liệu giả lập ban đầu
-mock_services: List[ServiceItem] = [
-    ServiceItem(id="court", name="Tiền sân", unit_price=30000),
-    ServiceItem(id="water", name="Nước suối", unit_price=10000),
-]
+# ✅ GET /api/services - Lấy toàn bộ danh sách dịch vụ
+@router.get("/", response_model=List[ServiceItem])
+def get_services(db: Session = Depends(get_db)):
+    return db.query(Service).all()
 
-@router.get("/services", response_model=List[ServiceItem])
-def get_services():
-    return mock_services
-
-@router.post("/services")
-def update_services(updated: List[ServiceItem]):
-    global mock_services
-    mock_services = updated
-    return {"message": "✅ Services updated", "total": len(mock_services)}
+# ✅ POST /api/services - Ghi đè toàn bộ danh sách dịch vụ (replace all)
+@router.post("/", response_model=dict)
+def update_services(updated_services: List[ServiceCreate], db: Session = Depends(get_db)):
+    # Xóa toàn bộ dịch vụ cũ
+    db.query(Service).delete()
+    # Thêm lại dịch vụ mới
+    for item in updated_services:
+        service = Service(id=item.id, name=item.name, unit_price=item.unit_price)
+        db.add(service)
+    db.commit()
+    return {"message": "✅ Danh sách dịch vụ đã được cập nhật", "total": len(updated_services)}

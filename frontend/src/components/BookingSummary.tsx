@@ -1,6 +1,12 @@
+// src/components/BookingSummary.tsx
 import { useEffect, useState } from "react";
-import { SERVICE_CATALOG, ServiceItem } from "../constants/services";
 import toast from "react-hot-toast";
+
+export interface ServiceItem {
+  id: string;
+  name: string;
+  unit_price: number;
+}
 
 interface BookingSummaryProps {
   booking: any;
@@ -16,8 +22,27 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
   const [selectedServiceId, setSelectedServiceId] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [services, setServices] = useState<SelectedService[]>([]);
+  const [availableServices, setAvailableServices] = useState<ServiceItem[]>([]);
 
   const storageKey = `services_${booking.id}`;
+
+  useEffect(() => {
+    const fetchAvailableServices = async () => {
+      try {
+        const res = await fetch("https://csa-backend-v90k.onrender.com/api/services/");
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setAvailableServices(data);
+        } else if (Array.isArray(data.data)) {
+          setAvailableServices(data.data);
+        }
+      } catch (err) {
+        console.error("❌ Lỗi khi gọi API dịch vụ:", err);
+      }
+    };
+
+    fetchAvailableServices();
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem(storageKey);
@@ -33,7 +58,7 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
   }, [services, storageKey]);
 
   const addService = () => {
-    const serviceItem = SERVICE_CATALOG.find((s) => s.id === selectedServiceId);
+    const serviceItem = availableServices.find((s) => s.id === selectedServiceId);
     if (!serviceItem) return;
 
     setServices((prev) => {
@@ -66,16 +91,30 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
   );
   const grandTotal = courtFee + servicesTotal - booking.deposit_amount;
 
-const handleCompleteBooking = async () => {
-  try {
-    await fetch(`https://csa-backend-v90k.onrender.com/api/bookings/${booking.id}/complete`, {
-      method: "POST",
-    });
-    toast.success("✅ Booking đã được cập nhật trạng thái!");
-  } catch (err) {
-    toast.error("❌ Không thể cập nhật trạng thái");
-  }
-};
+  const handleCompleteBooking = async () => {
+    try {
+      const res = await fetch(`https://csa-backend-v90k.onrender.com/api/bookings/${booking.id}/complete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          services: services.map((s) => ({
+            id: s.id,
+            name: s.name,
+            unit_price: s.unit_price,
+            quantity: s.quantity,
+          })),
+          grand_total: grandTotal,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to update booking");
+
+      toast.success("✅ Booking đã được cập nhật trạng thái!");
+      localStorage.removeItem(storageKey);
+    } catch (err) {
+      toast.error("❌ Không thể cập nhật trạng thái");
+    }
+  };
 
   return (
     <div className="border p-4 rounded-xl shadow bg-white mt-4">
@@ -91,7 +130,6 @@ const handleCompleteBooking = async () => {
         <p>💵 <b>Tiền cọc:</b> {booking.deposit_amount.toLocaleString()} VNĐ</p>
       </div>
 
-      {/* Người chơi */}
       {booking.players?.length > 0 && (
         <div className="mt-4">
           <h4 className="font-semibold text-sm text-gray-700 mb-2">👥 Danh sách người chơi:</h4>
@@ -132,7 +170,7 @@ const handleCompleteBooking = async () => {
                 onChange={(e) => setSelectedServiceId(e.target.value)}
               >
                 <option value="">-- Chọn dịch vụ --</option>
-                {SERVICE_CATALOG.map((s) => (
+                {availableServices.map((s: ServiceItem) => (
                   <option key={s.id} value={s.id}>{s.name}</option>
                 ))}
               </select>
@@ -195,7 +233,6 @@ const handleCompleteBooking = async () => {
         </p>
       </div>
 
-      {/* Thanh toán */}
       {booking.status !== "done" && (
         <button
           onClick={handleCompleteBooking}

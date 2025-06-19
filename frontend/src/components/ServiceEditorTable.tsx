@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { ServiceItem } from "../constants/services";
+
+export interface ServiceItem {
+  id: string;
+  name: string;
+  unit_price: number;
+}
 
 interface Props {
   initialServices: ServiceItem[];
@@ -13,19 +18,15 @@ const ServiceEditorTable = ({ initialServices, onUpdate }: Props) => {
     setServices(initialServices);
   }, [initialServices]);
 
-  useEffect(() => {
-    onUpdate(services);
-  }, [services, onUpdate]);
-
-const handleChange = (
-  index: number,
-  key: keyof ServiceItem,
-  value: string | number
-) => {
-  const updated = [...services];
-  (updated[index] as Record<string, any>)[key] = key === "unit_price" ? Number(value) : value;
-  setServices(updated);
-};
+  const handleChange = (
+    index: number,
+    key: keyof ServiceItem,
+    value: string | number
+  ) => {
+    const updated = [...services];
+    (updated[index] as any)[key] = key === "unit_price" ? Number(value) : value;
+    setServices(updated);
+  };
 
   const addRow = () => {
     setServices([
@@ -39,16 +40,8 @@ const handleChange = (
     setServices(updated);
   };
 
-  const exportJSON = () => {
-    const json = JSON.stringify(services, null, 2);
-    const blob = new Blob([json], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "services.json";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleSave = () => {
+    onUpdate(services);
   };
 
   return (
@@ -107,10 +100,10 @@ const handleChange = (
         </button>
 
         <button
-          onClick={exportJSON}
+          onClick={handleSave}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm"
         >
-          📤 Xuất JSON
+          💾 Lưu
         </button>
       </div>
     </div>

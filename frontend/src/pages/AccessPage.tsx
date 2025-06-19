@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 interface User {
   id: string;
@@ -11,17 +13,20 @@ interface User {
 
 const AccessPage = () => {
   const [phone, setPhone] = useState("");
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>([]);
+  const [fetchingUsers, setFetchingUsers] = useState(false);
+  const navigate = useNavigate();
 
-  // Load user từ localStorage nếu đã login trước đó
+  const { currentUser, setCurrentUser } = useAuth();
+
+  // Nếu đã login → chuyển vào Dashboard
   useEffect(() => {
-    const saved = localStorage.getItem("currentUser");
-    if (saved) {
-      setCurrentUser(JSON.parse(saved));
+    if (currentUser?.role === "admin") {
+      navigate("/");
     }
-  }, []);
+  }, [currentUser, navigate]);
 
+  // ✅ Login handler
   const handleLogin = async () => {
     try {
       const res = await fetch("https://csa-backend-v90k.onrender.com/api/users/login", {
@@ -31,21 +36,24 @@ const AccessPage = () => {
       });
       if (!res.ok) throw new Error("Login failed");
       const user = await res.json();
-      setCurrentUser(user);
       localStorage.setItem("currentUser", JSON.stringify(user));
+      setCurrentUser(user);
+      navigate("/");
     } catch (err) {
       alert("Không tìm thấy người dùng!");
     }
   };
 
-  // Nếu là admin, load danh sách user
+  // ✅ Chỉ fetch danh sách users đúng 1 lần nếu là admin
   useEffect(() => {
-    if (currentUser?.role === "admin") {
-      fetch("https://csa-backend-v90k.onrender.com/api/users")
-        .then((res) => res.json())
-        .then((data) => setUsers(data));
-    }
-  }, [currentUser]);
+    if (!currentUser || currentUser.role !== "admin" || fetchingUsers) return;
+
+    setFetchingUsers(true);
+    fetch("https://csa-backend-v90k.onrender.com/api/users")
+      .then((res) => res.json())
+      .then((data) => setUsers(data))
+      .catch((err) => console.error("Fetch users failed:", err));
+  }, [currentUser, fetchingUsers]);
 
   const handleLogout = () => {
     localStorage.removeItem("currentUser");
@@ -109,7 +117,9 @@ const AccessPage = () => {
                   <td className="p-2">{u.phone}</td>
                   <td className="p-2">{u.email || "-"}</td>
                   <td className="p-2 font-semibold text-indigo-600">{u.role}</td>
-                  <td className="p-2">{new Date(u.created_at).toLocaleString("vi-VN")}</td>
+                  <td className="p-2">
+                    {new Date(u.created_at).toLocaleString("vi-VN")}
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -7,7 +7,7 @@ from app.routers import member as member_router
 from app.routers import services as service_router
 from app.routers import user as user_router
 from app.config import settings
-
+from app.models import service
 app = FastAPI(title="CSA API", version="1.0.0")
 
 # ✅ CORS chính xác cho các frontend đang sử dụng
@@ -33,8 +33,8 @@ api_router = APIRouter(prefix="/api")
 api_router.include_router(booking_router.router)
 api_router.include_router(member_router.router)
 api_router.include_router(service_router.router)
+api_router.include_router(service_router.router)
 api_router.include_router(user_router.router)
-
 app.include_router(api_router)
 
 # ✅ Endpoint test

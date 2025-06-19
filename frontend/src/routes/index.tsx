@@ -7,61 +7,29 @@ import Members from "../pages/Members";
 import Services from "../pages/Services";
 import AccessPage from "../pages/AccessPage";
 import RequireAuth from "./RequireAuth";
+import DashboardLayout from "../layouts/DashboardLayout";
 
 function AppRoutes() {
   return (
     <Routes>
+      {/* Trang login */}
       <Route path="/access" element={<AccessPage />} />
 
-      {/* Các route bên dưới yêu cầu đăng nhập */}
+      {/* Các route yêu cầu login, sử dụng layout */}
       <Route
-        path="/"
         element={
           <RequireAuth>
-            <Dashboard />
+            <DashboardLayout />
           </RequireAuth>
         }
-      />
-      <Route
-        path="/booking"
-        element={
-          <RequireAuth>
-            <Booking />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/checkin"
-        element={
-          <RequireAuth>
-            <Checkin />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/checkout"
-        element={
-          <RequireAuth>
-            <Checkout />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/members"
-        element={
-          <RequireAuth>
-            <Members />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/services"
-        element={
-          <RequireAuth>
-            <Services />
-          </RequireAuth>
-        }
-      />
+      >
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/booking" element={<Booking />} />
+        <Route path="/checkin" element={<Checkin />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/members" element={<Members />} />
+        <Route path="/services" element={<Services />} />
+      </Route>
     </Routes>
   );
 }
