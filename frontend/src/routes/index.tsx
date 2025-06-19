@@ -1,25 +1,69 @@
 import { Routes, Route } from "react-router-dom";
-import DashboardLayout from "../layouts/DashboardLayout";
 import Dashboard from "../pages/Dashboard";
+import Booking from "../pages/Booking";
 import Checkin from "../pages/Checkin";
 import Checkout from "../pages/Checkout";
 import Members from "../pages/Members";
-import BookingPage from "../pages/Booking";
-import ServiceAdminPage from "../components/ServiceAdminPage"; // ✅
+import Services from "../pages/Services";
+import AccessPage from "../pages/AccessPage";
+import RequireAuth from "./RequireAuth";
 
-const AppRoutes = () => {
+function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<DashboardLayout />}>
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="checkin" element={<Checkin />} />
-        <Route path="checkout" element={<Checkout />} />
-        <Route path="members" element={<Members />} />
-        <Route path="booking" element={<BookingPage />} />
-        <Route path="services" element={<ServiceAdminPage />} /> {/* ✅ Thêm dòng này */}
-      </Route>
+      <Route path="/access" element={<AccessPage />} />
+
+      {/* Các route bên dưới yêu cầu đăng nhập */}
+      <Route
+        path="/"
+        element={
+          <RequireAuth>
+            <Dashboard />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/booking"
+        element={
+          <RequireAuth>
+            <Booking />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/checkin"
+        element={
+          <RequireAuth>
+            <Checkin />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/checkout"
+        element={
+          <RequireAuth>
+            <Checkout />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/members"
+        element={
+          <RequireAuth>
+            <Members />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/services"
+        element={
+          <RequireAuth>
+            <Services />
+          </RequireAuth>
+        }
+      />
     </Routes>
   );
-};
+}
 
 export default AppRoutes;
