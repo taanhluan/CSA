@@ -13,7 +13,7 @@ app = FastAPI(title="CSA API", version="1.0.0")
 # ✅ CORS chính xác cho các frontend đang sử dụng
 origins = [
     "https://jubilant-space-funicular-j6jgjjgj4wvfw67-3000.app.github.dev",  # Codespaces frontend
-    "https://csa-bs2i59baq-taanhluans-projects.vercel.app",  # Vercel frontend
+    "https://csa-taanhluans-projects.vercel.app",  # ✅ Vercel frontend (correct!)
     "http://localhost:3000",  # Local test
 ]
 
