@@ -5,7 +5,7 @@ from app.database import SessionLocal
 from app.models.service import Service  # ✅ Sửa path chính xác
 from app.schemas.services import ServiceItem, ServiceCreate
 
-router = APIRouter(prefix="/api/services", tags=["Services"])
+router = APIRouter(prefix="/services", tags=["Services"])
 
 # Dependency: lấy session database
 def get_db():

@@ -16,7 +16,7 @@ const ServiceAdminPage = () => {
 
   const storageKey = "service_catalog";
 
-  // ✅ Load data từ backend (hoặc local nếu lỗi)
+  // ✅ Fetch từ backend (hoặc local nếu fail)
   useEffect(() => {
     const fetchServices = async () => {
       try {
@@ -31,12 +31,10 @@ const ServiceAdminPage = () => {
           throw new Error("❌ Dữ liệu không hợp lệ");
         }
       } catch (err) {
-        console.error("❌ Lỗi gọi API, dùng local:", err);
+        console.error("❌ Lỗi API, fallback local:", err);
         const stored = localStorage.getItem(storageKey);
         if (stored) {
           setServices(JSON.parse(stored));
-        } else {
-          setServices([]);
         }
       }
     };
@@ -44,7 +42,7 @@ const ServiceAdminPage = () => {
     fetchServices();
   }, []);
 
-  // ✅ Thêm dòng mới
+  // ✅ Thêm dịch vụ mới vào danh sách
   const handleAdd = () => {
     if (!newService.id.trim() || !newService.name.trim()) return;
     if (services.find((s) => s.id === newService.id)) {
@@ -56,21 +54,26 @@ const ServiceAdminPage = () => {
     setNewService({ id: "", name: "", unit_price: 0 });
   };
 
+  // ✅ Xoá dịch vụ khỏi danh sách
   const handleDelete = (id: string) => {
     setServices(services.filter((s) => s.id !== id));
   };
 
+  // ✅ Cập nhật giá trị ô input
   const handleChange = (
     index: number,
     key: keyof ServiceItem,
     value: string | number
   ) => {
     const updated = [...services];
-    (updated[index] as any)[key] = key === "unit_price" ? Number(value) : value;
+    updated[index] = {
+      ...updated[index],
+      [key]: key === "unit_price" ? Number(value) : value,
+    };
     setServices(updated);
   };
 
-  // ✅ Gửi toàn bộ danh sách về DB
+  // ✅ Gửi toàn bộ danh sách xuống backend
   const handleSave = async () => {
     try {
       const res = await fetch("https://csa-backend-v90k.onrender.com/api/services/", {
@@ -79,13 +82,13 @@ const ServiceAdminPage = () => {
         body: JSON.stringify(services),
       });
 
-      if (!res.ok) throw new Error("Lỗi khi lưu");
+      if (!res.ok) throw new Error("Lưu thất bại");
 
-      alert("✅ Lưu danh sách dịch vụ thành công!");
       localStorage.setItem(storageKey, JSON.stringify(services));
+      alert("✅ Lưu thành công!");
     } catch (err) {
-      alert("❌ Không thể lưu xuống backend");
-      console.error(err);
+      console.error("❌ Lỗi khi lưu:", err);
+      alert("❌ Không thể lưu dữ liệu xuống backend.");
     }
   };
 

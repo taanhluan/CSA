@@ -91,21 +91,14 @@ const ServiceEditorTable = ({ initialServices, onUpdate }: Props) => {
         </tbody>
       </table>
 
-      <div className="mt-4 flex justify-between items-center">
-        <button
-          onClick={addRow}
-          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm"
-        >
-          ➕ Thêm dòng
-        </button>
-
-        <button
-          onClick={handleSave}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm"
-        >
-          💾 Lưu
-        </button>
-      </div>
+     <div className="mt-4 text-left">
+  <button
+    onClick={addRow}
+    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm"
+  >
+    ➕ Thêm dòng
+  </button>
+</div>
     </div>
   );
 };
