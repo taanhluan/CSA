@@ -33,7 +33,6 @@ api_router = APIRouter(prefix="/api")
 api_router.include_router(booking_router.router)
 api_router.include_router(member_router.router)
 api_router.include_router(service_router.router)
-api_router.include_router(service_router.router)
 api_router.include_router(user_router.router)
 app.include_router(api_router)
 
