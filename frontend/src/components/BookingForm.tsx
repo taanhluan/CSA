@@ -243,7 +243,7 @@ const BookingForm = () => {
                 <li
                   key={b.id}
                   className="py-2 text-sm hover:bg-gray-50 cursor-pointer"
-                  onClick={() => b.status === "booked" && setRecentBooking(b)}
+                  onClick={() => setRecentBooking(b)}
                 >
                   <div className="flex justify-between">
                     <span>
