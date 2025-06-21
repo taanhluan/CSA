@@ -17,14 +17,13 @@ interface Props {
 const ServiceEditorTable = ({ initialServices, onUpdate }: Props) => {
   const [services, setServices] = useState<ServiceEditorItem[]>([]);
 
-  useEffect(() => {
-    // Nếu quantity chưa có, gán mặc định = 0
-    const extendedServices = initialServices.map((s) => ({
-      ...s,
-      quantity: s.quantity ?? 0,
-    }));
-    setServices(extendedServices);
-  }, [initialServices]);
+useEffect(() => {
+  const extended = initialServices.map((s) => ({
+    ...s,
+    quantity: s.quantity ?? 0, // fallback nếu chưa có
+  }));
+  setServices(extended);
+}, [initialServices]);
 
   const handleChange = (
     index: number,
