@@ -7,7 +7,7 @@ import pytz
 import logging
 
 from app.database import SessionLocal
-from app.models.booking import Booking, BookingPlayer, BookingService, CheckinLog, BookingStatus
+from app.models.booking import Booking, BookingPlayer, BookingService, BookingStatus
 from app.schemas.booking import BookingCreate, BookingResponse
 
 router = APIRouter(prefix="/bookings", tags=["Bookings"])
