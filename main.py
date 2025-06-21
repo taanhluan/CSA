@@ -19,7 +19,7 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],  # 👈 hoặc ["https://<github-pages-domain>"]
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

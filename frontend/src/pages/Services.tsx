@@ -1,12 +1,9 @@
 import React, { useEffect, useState } from "react";
 import ServiceEditorTable from "../components/ServiceEditorTable";
+import { ServiceItem } from "../types";
 import axios from "axios";
 
-export interface ServiceItem {
-  id: string;
-  name: string;
-  unit_price: number;
-}
+
 
 const ServiceAdminPage = () => {
   const [services, setServices] = useState<ServiceItem[]>([]);

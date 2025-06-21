@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
+import { ServiceItem } from "../types"; // Dùng interface gốc để type props
 
-export interface ServiceItem {
-  id: string;
+// Interface tạm thời cho bảng chỉnh sửa
+interface ServiceEditorItem {
+  id?: number;
   name: string;
   unit_price: number;
 }
 
 interface Props {
   initialServices: ServiceItem[];
-  onUpdate: (updated: ServiceItem[]) => void;
+  onUpdate: (updated: ServiceEditorItem[]) => void;
 }
 
 const ServiceEditorTable = ({ initialServices, onUpdate }: Props) => {
-  const [services, setServices] = useState<ServiceItem[]>([]);
+  const [services, setServices] = useState<ServiceEditorItem[]>([]);
 
   useEffect(() => {
     setServices(initialServices);
@@ -20,28 +22,25 @@ const ServiceEditorTable = ({ initialServices, onUpdate }: Props) => {
 
   const handleChange = (
     index: number,
-    key: keyof ServiceItem,
+    key: keyof ServiceEditorItem,
     value: string | number
   ) => {
     const updated = [...services];
     (updated[index] as any)[key] = key === "unit_price" ? Number(value) : value;
     setServices(updated);
+    onUpdate(updated);
   };
 
   const addRow = () => {
-    setServices([
-      ...services,
-      { id: `id_${Date.now()}`, name: "", unit_price: 0 },
-    ]);
+    const updated = [...services, { name: "", unit_price: 0 }];
+    setServices(updated);
+    onUpdate(updated);
   };
 
   const removeRow = (index: number) => {
     const updated = services.filter((_, i) => i !== index);
     setServices(updated);
-  };
-
-  const handleSave = () => {
-    onUpdate(services);
+    onUpdate(updated);
   };
 
   return (
@@ -50,7 +49,6 @@ const ServiceEditorTable = ({ initialServices, onUpdate }: Props) => {
       <table className="table-auto w-full border text-sm">
         <thead className="bg-gray-100">
           <tr>
-            <th className="border px-3 py-2">ID</th>
             <th className="border px-3 py-2">Tên dịch vụ</th>
             <th className="border px-3 py-2">Đơn giá (VNĐ)</th>
             <th className="border px-3 py-2 text-center">Thao tác</th>
@@ -58,8 +56,7 @@ const ServiceEditorTable = ({ initialServices, onUpdate }: Props) => {
         </thead>
         <tbody>
           {services.map((item, index) => (
-            <tr key={item.id}>
-              <td className="border px-3 py-2 text-gray-500">{item.id}</td>
+            <tr key={index}>
               <td className="border px-3 py-2">
                 <input
                   type="text"
@@ -72,9 +69,7 @@ const ServiceEditorTable = ({ initialServices, onUpdate }: Props) => {
                 <input
                   type="number"
                   value={item.unit_price}
-                  onChange={(e) =>
-                    handleChange(index, "unit_price", e.target.value)
-                  }
+                  onChange={(e) => handleChange(index, "unit_price", e.target.value)}
                   className="w-full px-2 py-1 border rounded text-right"
                 />
               </td>
@@ -91,14 +86,14 @@ const ServiceEditorTable = ({ initialServices, onUpdate }: Props) => {
         </tbody>
       </table>
 
-     <div className="mt-4 text-left">
-  <button
-    onClick={addRow}
-    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm"
-  >
-    ➕ Thêm dòng
-  </button>
-</div>
+      <div className="mt-4 text-left">
+        <button
+          onClick={addRow}
+          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm"
+        >
+          ➕ Thêm dòng
+        </button>
+      </div>
     </div>
   );
 };
