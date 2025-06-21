@@ -1,3 +1,5 @@
+# app/models/booking.py
+
 from sqlalchemy import Column, String, Integer, Enum, ForeignKey, DateTime, Numeric, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -42,14 +44,14 @@ class Booking(Base):
         cascade="all, delete-orphan"
     )
 
-        # 🧾 Liên kết đến các dịch vụ đã dùng
+    # 🧾 Liên kết đến các dịch vụ đã dùng
     services = relationship(
         "BookingService",
         back_populates="booking",
         cascade="all, delete-orphan"
     )
 
-    # ------------------------------
+# ------------------------------
 # SERVICE USED PER BOOKING
 # ------------------------------
 
@@ -65,14 +67,6 @@ class BookingService(Base):
 
     booking = relationship("Booking", back_populates="services")
 
-
-    # 📒 Liên kết đến checkin log
-    checkin_logs = relationship(
-        "CheckinLog",
-        back_populates="booking",
-        cascade="all, delete-orphan"
-    )
-
 # ------------------------------
 # PLAYER PER BOOKING
 # ------------------------------
@@ -86,18 +80,3 @@ class BookingPlayer(Base):
     is_leader = Column(Boolean, default=False)
 
     booking = relationship("Booking", back_populates="players")
-
-# ------------------------------
-# CHECKIN / CHECKOUT LOG
-# ------------------------------
-
-class CheckinLog(Base):
-    __tablename__ = "checkin_logs"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    booking_id = Column(UUID(as_uuid=True), ForeignKey("bookings.id"))
-    checkin_time = Column(DateTime, default=datetime.utcnow)
-    checkout_time = Column(DateTime, nullable=True)
-    staff_checked_by = Column(String)
-
-    booking = relationship("Booking", back_populates="checkin_logs")
