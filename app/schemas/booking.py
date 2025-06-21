@@ -1,4 +1,3 @@
-from pydantic import BaseModel
 from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 from uuid import UUID
@@ -34,11 +33,23 @@ class BookingPlayerSchema(BaseModel):
         orm_mode = True
 
 # ------------------------------
+# SERVICE ITEM SCHEMA
+# ------------------------------
+
+class BookingServiceItem(BaseModel):
+    id: str
+    name: str
+    unit_price: int
+    quantity: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+# ------------------------------
 # BOOKING SCHEMAS
 # ------------------------------
 
 class BookingCreate(BaseModel):
-    member_id: Optional[UUID] = None  # Optional for walk-in
+    member_id: Optional[UUID] = None
     type: BookingType
     date_time: datetime
     duration: int
@@ -55,15 +66,9 @@ class BookingResponse(BaseModel):
     deposit_amount: Optional[float]
     created_at: datetime
 
-    # ✅ Trả về danh sách người chơi
     players: List[BookingPlayerSchema] = []
 
-    # ✅ Cấu hình cho Pydantic V2 (thay cho orm_mode = True)
+    # ✅ Thêm danh sách dịch vụ đã dùng
+    services: List[BookingServiceItem] = []
+
     model_config = ConfigDict(from_attributes=True)
-
-# ------------------------------
-# CHECK-IN / CHECK-OUT
-# ------------------------------
-
-class CheckinInput(BaseModel):
-    staff_checked_by: str

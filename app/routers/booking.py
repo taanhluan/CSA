@@ -7,8 +7,8 @@ import pytz
 import logging
 
 from app.database import SessionLocal
-from app.models.booking import Booking, BookingPlayer, CheckinLog, BookingStatus
-from app.schemas.booking import BookingCreate, BookingResponse, CheckinInput
+from app.models.booking import Booking, BookingPlayer, BookingService, CheckinLog, BookingStatus
+from app.schemas.booking import BookingCreate, BookingResponse
 
 router = APIRouter(prefix="/bookings", tags=["Bookings"])
 
@@ -52,60 +52,6 @@ def create_booking(data: BookingCreate, db: Session = Depends(get_db)):
     return booking
 
 # ------------------------------
-# Check-in theo booking_id
-# ------------------------------
-@router.post("/{booking_id}/checkin")
-def checkin(booking_id: UUID, checkin: CheckinInput, db: Session = Depends(get_db)):
-    booking = db.query(Booking).get(booking_id)
-    if not booking:
-        raise HTTPException(status_code=404, detail="Booking not found")
-
-    booking.status = BookingStatus.checked_in
-    db.add(CheckinLog(
-        booking_id=booking.id,
-        staff_checked_by=checkin.staff_checked_by
-    ))
-    db.commit()
-    return {"message": "Checked in"}
-
-# ------------------------------
-# Check-in theo member_id
-# ------------------------------
-@router.post("/checkin-by-member/{member_id}")
-def checkin_by_member(member_id: UUID, checkin: CheckinInput, db: Session = Depends(get_db)):
-    latest = (
-        db.query(Booking)
-        .filter(Booking.member_id == member_id, Booking.status == BookingStatus.booked)
-        .order_by(Booking.date_time.desc())
-        .first()
-    )
-    if not latest:
-        raise HTTPException(status_code=404, detail="No active booking found")
-
-    latest.status = BookingStatus.checked_in
-    db.add(CheckinLog(booking_id=latest.id, staff_checked_by=checkin.staff_checked_by))
-    db.commit()
-    return {"message": f"Checked in booking {latest.id}"}
-
-# ------------------------------
-# Checkout
-# ------------------------------
-@router.post("/{booking_id}/checkout")
-def checkout(booking_id: UUID, db: Session = Depends(get_db)):
-    log = db.query(CheckinLog).filter(
-        CheckinLog.booking_id == booking_id,
-        CheckinLog.checkout_time == None
-    ).first()
-    if not log:
-        raise HTTPException(status_code=404, detail="No check-in found")
-
-    log.checkout_time = datetime.utcnow()
-    booking = db.query(Booking).get(booking_id)
-    booking.status = BookingStatus.done
-    db.commit()
-    return {"message": "Checked out"}
-
-# ------------------------------
 # Lấy danh sách booking theo ngày (yyyy-mm-dd)
 # ------------------------------
 @router.get("/by-date", response_model=List[BookingResponse])
@@ -121,7 +67,10 @@ def get_bookings_by_date(date_str: str, db: Session = Depends(get_db)):
 
     bookings = (
         db.query(Booking)
-        .options(joinedload(Booking.players))
+        .options(
+        joinedload(Booking.players),
+        joinedload(Booking.services)  # ✅ Load thêm services
+    )
         .filter(Booking.date_time.between(start, end))
         .order_by(Booking.date_time.asc())
         .all()
@@ -129,19 +78,36 @@ def get_bookings_by_date(date_str: str, db: Session = Depends(get_db)):
     return bookings
 
 # ------------------------------
-# ✅ Hoàn tất thanh toán (update status = done)
+# ✅ Hoàn tất thanh toán (update status = done + lưu dịch vụ)
 # ------------------------------
 @router.post("/{booking_id}/complete")
-def complete_booking(booking_id: UUID, db: Session = Depends(get_db)):
+def complete_booking(booking_id: UUID, payload: dict, db: Session = Depends(get_db)):
     try:
         booking = db.query(Booking).get(booking_id)
         if not booking:
             raise HTTPException(status_code=404, detail="Booking not found")
 
-        logger.info(f"🔄 Updating booking {booking.id} status from {booking.status} → done")
-        booking.status = BookingStatus.done  # hoặc .done.value nếu column là String
+        # Xóa dịch vụ cũ (nếu có)
+        db.query(BookingService).filter(BookingService.booking_id == booking_id).delete()
+
+        # Thêm mới dịch vụ từ payload
+        services = payload.get("services", [])
+        for s in services:
+            db.add(BookingService(
+                id=uuid4(),
+                booking_id=booking_id,
+                name=s["name"],
+                unit_price=s["unit_price"],
+                quantity=s["quantity"]
+            ))
+
+        # Cập nhật status + grand_total
+        booking.status = BookingStatus.done
+        booking.grand_total = payload.get("grand_total", 0)
+
         db.commit()
-        return {"message": "Booking marked as done"}
+        return {"message": "Booking marked as done with services"}
+
     except Exception as e:
         logger.error(f"❌ Error completing booking {booking_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal Server Error")

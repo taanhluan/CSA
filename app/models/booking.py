@@ -42,6 +42,30 @@ class Booking(Base):
         cascade="all, delete-orphan"
     )
 
+        # 🧾 Liên kết đến các dịch vụ đã dùng
+    services = relationship(
+        "BookingService",
+        back_populates="booking",
+        cascade="all, delete-orphan"
+    )
+
+    # ------------------------------
+# SERVICE USED PER BOOKING
+# ------------------------------
+
+class BookingService(Base):
+    __tablename__ = "booking_services"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    booking_id = Column(UUID(as_uuid=True), ForeignKey("bookings.id"))
+    service_id = Column(UUID(as_uuid=True))  # ID gốc từ bảng dịch vụ
+    name = Column(String)
+    unit_price = Column(Numeric)
+    quantity = Column(Integer)
+
+    booking = relationship("Booking", back_populates="services")
+
+
     # 📒 Liên kết đến checkin log
     checkin_logs = relationship(
         "CheckinLog",

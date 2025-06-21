@@ -10,4 +10,6 @@ export const SERVICE_CATALOG: ServiceItem[] = [
 export interface ServiceCreate {
   name: string;
   unit_price: number;
+  quantity: number; // <--- Thêm dòng này
 }
+
