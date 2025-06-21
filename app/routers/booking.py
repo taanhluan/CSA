@@ -32,7 +32,7 @@ def create_booking(data: BookingCreate, db: Session = Depends(get_db)):
         id=uuid4(),
         member_id=data.member_id,
         type=data.type,
-        date_time=data.date_time,
+        date_time=data.date_time,  # FE gửi theo giờ VNT, backend lưu UTC (nên đồng bộ FE gửi đúng ISO 8601 với VNT)
         duration=data.duration,
         deposit_amount=data.deposit_amount,
     )
@@ -61,17 +61,21 @@ def get_bookings_by_date(date_str: str, db: Session = Depends(get_db)):
     except:
         raise HTTPException(status_code=400, detail="Invalid date format. Use yyyy-mm-dd")
 
-    tz = pytz.timezone("Asia/Ho_Chi_Minh")
-    start = tz.localize(datetime.combine(target_date, time.min)).astimezone(pytz.utc)
-    end = tz.localize(datetime.combine(target_date, time.max)).astimezone(pytz.utc)
+    # Chuyển ngày theo giờ Việt Nam -> UTC để so sánh với DB (lưu UTC)
+    local_tz = pytz.timezone("Asia/Ho_Chi_Minh")
+    start_local = local_tz.localize(datetime.combine(target_date, time.min))
+    end_local = local_tz.localize(datetime.combine(target_date, time.max))
+
+    start_utc = start_local.astimezone(pytz.utc)
+    end_utc = end_local.astimezone(pytz.utc)
 
     bookings = (
         db.query(Booking)
         .options(
-        joinedload(Booking.players),
-        joinedload(Booking.services)  # ✅ Load thêm services
-    )
-        .filter(Booking.date_time.between(start, end))
+            joinedload(Booking.players),
+            joinedload(Booking.services)
+        )
+        .filter(Booking.date_time.between(start_utc, end_utc))
         .order_by(Booking.date_time.asc())
         .all()
     )
