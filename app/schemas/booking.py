@@ -37,7 +37,7 @@ class BookingPlayerSchema(BaseModel):
 # ------------------------------
 
 class BookingServiceItem(BaseModel):
-    id: str
+    id: UUID
     name: str
     unit_price: int
     quantity: int
