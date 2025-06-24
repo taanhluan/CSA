@@ -12,10 +12,10 @@ import DashboardLayout from "../layouts/DashboardLayout";
 function AppRoutes() {
   return (
     <Routes>
-      {/* Trang login */}
+      {/* Trang login không cần layout */}
       <Route path="/access" element={<AccessPage />} />
 
-      {/* Các route yêu cầu login, sử dụng layout */}
+      {/* Các route bên trong layout yêu cầu đăng nhập */}
       <Route
         element={
           <RequireAuth>
@@ -23,7 +23,11 @@ function AppRoutes() {
           </RequireAuth>
         }
       >
-        <Route path="/" element={<Dashboard />} />
+        {/* Có thể truy cập dashboard từ cả / và /dashboard */}
+        <Route index element={<Dashboard />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+
+        {/* Các route khác */}
         <Route path="/booking" element={<Booking />} />
         <Route path="/checkin" element={<Checkin />} />
         <Route path="/checkout" element={<Checkout />} />
