@@ -18,7 +18,7 @@ interface SelectedService extends ServiceItem {
 }
 
 const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
-  const isReadOnly = booking.status === "done"; // ✅ Thêm dòng này
+  const isReadOnly = booking.status === "done";
 
   const [showServices, setShowServices] = useState(false);
   const [selectedServiceId, setSelectedServiceId] = useState("");
@@ -41,71 +41,76 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
     fetchAvailableServices();
   }, []);
 
-  useEffect(() => {
-    const saved = localStorage.getItem(storageKey);
-    if (saved) {
-      setServices(JSON.parse(saved));
-    }
-  }, [booking.id]);
+useEffect(() => {
+  const saved = localStorage.getItem(storageKey);
 
-  useEffect(() => {
-  if (isReadOnly && booking.services && Array.isArray(booking.services)) {
-    // Gán dữ liệu dịch vụ đã hoàn tất từ backend
+  if (!isReadOnly && saved) {
+    setServices(JSON.parse(saved));
+  } else if (isReadOnly && booking.services && Array.isArray(booking.services)) {
     setServices(booking.services);
   } else {
-    const saved = localStorage.getItem(storageKey);
-    if (saved) {
-      setServices(JSON.parse(saved));
-    }
+    setServices([]);
   }
 }, [booking.id, booking.services, isReadOnly]);
-
-
-  useEffect(() => {
-    localStorage.setItem(storageKey, JSON.stringify(services));
-  }, [services, storageKey]);
 
   const addService = () => {
     if (isReadOnly) return;
     const serviceItem = availableServices.find((s) => String(s.id) === selectedServiceId);
     if (!serviceItem) return;
 
-    setServices((prev) => {
-      const existing = prev.find((s) => s.id === selectedServiceId);
-      return existing
-        ? prev.map((s) => s.id === selectedServiceId ? { ...s, quantity: s.quantity + quantity } : s)
-        : [...prev, { ...serviceItem, quantity }];
-    });
+    let updatedServices: SelectedService[] = [];
 
+    setServices((prev) => {
+  const existing = prev.find((s) => s.id === selectedServiceId);
+    updatedServices = existing
+      ? prev.map((s) =>
+          s.id === selectedServiceId ? { ...s, quantity: s.quantity + quantity } : s
+        )
+      : [...prev, { ...serviceItem, quantity }];
+    return updatedServices;
+    });
+  setTimeout(() => {
+    localStorage.setItem(storageKey, JSON.stringify(updatedServices));
+  }, 0);
     setSelectedServiceId("");
     setQuantity(1);
   };
 
   const updateQuantity = (id: string, value: number) => {
     if (isReadOnly) return;
-    setServices((prev) => prev.map((s) => s.id === id ? { ...s, quantity: value } : s));
+    setServices((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, quantity: value } : s))
+    );
   };
 
-  const courtFee = booking.duration * 500;
+  const removeService = (id: string) => {
+    if (isReadOnly) return;
+    setServices((prev) => prev.filter((s) => s.id !== id));
+  };
+
+
   const servicesTotal = services.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
-  const grandTotal = courtFee + servicesTotal - booking.deposit_amount;
+  const grandTotal = servicesTotal - booking.deposit_amount;
 
   const handleCompleteBooking = async () => {
     if (isReadOnly) return;
     try {
-      const res = await fetch(`https://csa-backend-v90k.onrender.com/api/bookings/${booking.id}/complete`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          services: services.map((s) => ({
-            id: s.id,
-            name: s.name,
-            unit_price: s.unit_price,
-            quantity: s.quantity,
-          })),
-          grand_total: grandTotal,
-        }),
-      });
+      const res = await fetch(
+        `https://csa-backend-v90k.onrender.com/api/bookings/${booking.id}/complete`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            services: services.map((s) => ({
+              id: s.id,
+              name: s.name,
+              unit_price: s.unit_price,
+              quantity: s.quantity,
+            })),
+            grand_total: grandTotal,
+          }),
+        }
+      );
 
       if (!res.ok) throw new Error("Failed to update booking");
 
@@ -136,7 +141,6 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
         <p>💵 <b>Tiền cọc:</b> {booking.deposit_amount.toLocaleString()} VNĐ</p>
       </div>
 
-      {/* Người chơi */}
       {booking.players?.length > 0 && (
         <div className="mt-4">
           <h4 className="font-semibold text-sm text-gray-700 mb-2">👥 Danh sách người chơi:</h4>
@@ -159,7 +163,6 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
         </div>
       )}
 
-      {/* Dịch vụ */}
       <div className="mt-5">
         {!isReadOnly && (
           <button
@@ -178,11 +181,12 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
                   className="flex-1 border px-3 py-2 rounded text-sm"
                   value={selectedServiceId}
                   onChange={(e) => setSelectedServiceId(e.target.value)}
-                  disabled={isReadOnly}
                 >
                   <option value="">-- Chọn dịch vụ --</option>
                   {availableServices.map((s) => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
                   ))}
                 </select>
                 <input
@@ -191,60 +195,68 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
                   min={1}
                   value={quantity}
                   onChange={(e) => setQuantity(Number(e.target.value))}
-                  disabled={isReadOnly}
                 />
                 <button
                   className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded text-sm"
                   onClick={addService}
-                  disabled={isReadOnly}
                 >
                   ➕ Thêm
                 </button>
               </div>
             )}
 
-{services.length > 0 && (
-  <table className="w-full text-sm mt-3 border rounded shadow-sm">
-    <thead className="bg-gray-100 text-left">
-      <tr>
-        <th className="p-2">Dịch vụ</th>
-        <th className="p-2 text-center">Số lượng</th>
-        <th className="p-2 text-right">Đơn giá</th>
-        <th className="p-2 text-right">Thành tiền</th>
-      </tr>
-    </thead>
-    <tbody>
-      {services.map((s) => (
-        <tr key={s.id} className="border-t">
-          <td className="p-2">{s.name}</td>
-          <td className="p-2 text-center">
-            {isReadOnly ? (
-              <span>{s.quantity}</span>
-            ) : (
-              <input
-                type="number"
-                className="w-14 border rounded px-1 text-center"
-                value={s.quantity}
-                min={1}
-                onChange={(e) => updateQuantity(s.id, Number(e.target.value))}
-              />
+            {services.length > 0 && (
+              <table className="w-full text-sm mt-3 border rounded shadow-sm">
+                <thead className="bg-gray-100 text-left">
+                  <tr>
+                    <th className="p-2">Dịch vụ</th>
+                    <th className="p-2 text-center">Số lượng</th>
+                    <th className="p-2 text-right">Đơn giá</th>
+                    <th className="p-2 text-right">Thành tiền</th>
+                    {!isReadOnly && <th className="p-2 text-right">Xoá</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {services.map((s) => (
+                    <tr key={s.id} className="border-t">
+                      <td className="p-2">{s.name}</td>
+                      <td className="p-2 text-center">
+                        {isReadOnly ? (
+                          <span>{s.quantity}</span>
+                        ) : (
+                          <input
+                            type="number"
+                            className="w-14 border rounded px-1 text-center"
+                            value={s.quantity}
+                            min={1}
+                            onChange={(e) => updateQuantity(s.id, Number(e.target.value))}
+                          />
+                        )}
+                      </td>
+                      <td className="p-2 text-right">{s.unit_price.toLocaleString()}đ</td>
+                      <td className="p-2 text-right">
+                        {(s.quantity * s.unit_price).toLocaleString()}đ
+                      </td>
+                      {!isReadOnly && (
+                        <td className="p-2 text-right">
+                          <button
+                            className="text-red-600 hover:text-red-800 text-xs"
+                            onClick={() => removeService(s.id)}
+                          >
+                            🗑️
+                          </button>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
-          </td>
-          <td className="p-2 text-right">{s.unit_price.toLocaleString()}đ</td>
-          <td className="p-2 text-right">{(s.quantity * s.unit_price).toLocaleString()}đ</td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-)}
-
           </div>
         )}
       </div>
 
-      {/* Tổng kết */}
       <div className="mt-6 text-right text-sm text-gray-800 space-y-1 border-t pt-4">
-        <p>🏀 Tiền sân ({booking.duration} phút): <b>{courtFee.toLocaleString()}đ</b></p>
         <p>➕ Dịch vụ: <b>{servicesTotal.toLocaleString()}đ</b></p>
         <p>➖ Tiền cọc: <b>-{booking.deposit_amount.toLocaleString()}đ</b></p>
         <p className="text-lg font-bold text-indigo-700 mt-2">

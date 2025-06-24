@@ -19,14 +19,12 @@ const AccessPage = () => {
 
   const { currentUser, setCurrentUser } = useAuth();
 
-  // Nếu đã login → chuyển vào Dashboard
   useEffect(() => {
     if (currentUser?.role === "admin") {
       navigate("/");
     }
   }, [currentUser, navigate]);
 
-  // ✅ Login handler
   const handleLogin = async () => {
     try {
       const res = await fetch("https://csa-backend-v90k.onrender.com/api/users/login", {
@@ -44,7 +42,6 @@ const AccessPage = () => {
     }
   };
 
-  // ✅ Chỉ fetch danh sách users đúng 1 lần nếu là admin
   useEffect(() => {
     if (!currentUser || currentUser.role !== "admin" || fetchingUsers) return;
 
@@ -61,38 +58,49 @@ const AccessPage = () => {
   };
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-orange-900 text-white flex items-center justify-center px-4 py-10">
       {!currentUser ? (
-        <div className="space-y-3">
-          <h2 className="text-xl font-bold text-indigo-600">🔐 Đăng nhập truy cập hệ thống</h2>
+        <div className="bg-white text-gray-800 shadow-xl rounded-xl p-8 w-full max-w-md space-y-6">
+          <div className="text-center space-y-2">
+            <h1 className="text-3xl font-black text-orange-600 tracking-wide uppercase flex justify-center items-center gap-2">
+              🏀 CSA Login
+            </h1>
+            <p className="text-gray-600 italic">
+              Quản lý sân bóng rổ – nhanh chóng, tiện lợi và chính xác
+            </p>
+          </div>
           <input
             type="text"
-            className="border px-3 py-2 w-full rounded"
-            placeholder="Nhập số điện thoại"
+            className="border border-gray-300 px-4 py-3 w-full rounded-lg focus:ring-2 focus:ring-orange-500 text-center text-lg tracking-wider"
+            placeholder="📱 Nhập số điện thoại"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
           />
           <button
             onClick={handleLogin}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded"
+            className="bg-orange-600 hover:bg-orange-700 transition-all duration-150 text-white px-6 py-3 w-full rounded-lg text-lg font-semibold shadow-md"
           >
-            Đăng nhập
+            🏀 Vào sân
           </button>
+          <p className="text-center text-gray-400 text-xs">Dành cho admin & nhân viên CSA</p>
         </div>
       ) : currentUser.role !== "admin" ? (
-        <div className="text-red-600">
-          🚫 Bạn không có quyền truy cập. Vui lòng liên hệ Admin.
+        <div className="text-red-600 text-center space-y-4">
+          <p className="text-lg font-semibold">🚫 Bạn không có quyền truy cập.</p>
+          <p className="text-sm">Vui lòng liên hệ quản lý để được cấp quyền.</p>
           <button
-            className="ml-4 text-sm underline text-blue-600"
+            className="text-sm underline text-blue-300"
             onClick={handleLogout}
           >
             Đăng xuất
           </button>
         </div>
       ) : (
-        <div>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold">👑 Quản lý người dùng (Admin)</h2>
+        <div className="bg-white text-gray-800 shadow-xl rounded-xl p-8 w-full max-w-5xl">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-orange-700 flex items-center gap-2">
+              👑 Danh sách người dùng
+            </h2>
             <button
               onClick={handleLogout}
               className="text-sm text-red-600 hover:underline"
@@ -100,7 +108,7 @@ const AccessPage = () => {
               Đăng xuất
             </button>
           </div>
-          <table className="w-full border text-sm shadow-md rounded-lg overflow-hidden">
+          <table className="w-full border text-sm shadow rounded overflow-hidden">
             <thead className="bg-gray-100 text-left">
               <tr>
                 <th className="p-2">Họ tên</th>
@@ -112,7 +120,7 @@ const AccessPage = () => {
             </thead>
             <tbody>
               {users.map((u) => (
-                <tr key={u.id} className="border-t">
+                <tr key={u.id} className="border-t hover:bg-gray-50">
                   <td className="p-2">{u.name}</td>
                   <td className="p-2">{u.phone}</td>
                   <td className="p-2">{u.email || "-"}</td>
