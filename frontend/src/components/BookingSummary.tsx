@@ -1,6 +1,7 @@
 // src/components/BookingSummary.tsx
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import styles from "./BookingSummary.module.css";
 
 export interface ServiceItem {
   id: string;
@@ -41,17 +42,16 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
     fetchAvailableServices();
   }, []);
 
-useEffect(() => {
-  const saved = localStorage.getItem(storageKey);
-
-  if (!isReadOnly && saved) {
-    setServices(JSON.parse(saved));
-  } else if (isReadOnly && booking.services && Array.isArray(booking.services)) {
-    setServices(booking.services);
-  } else {
-    setServices([]);
-  }
-}, [booking.id, booking.services, isReadOnly]);
+  useEffect(() => {
+    const saved = localStorage.getItem(storageKey);
+    if (!isReadOnly && saved) {
+      setServices(JSON.parse(saved));
+    } else if (isReadOnly && booking.services && Array.isArray(booking.services)) {
+      setServices(booking.services);
+    } else {
+      setServices([]);
+    }
+  }, [booking.id, booking.services, isReadOnly]);
 
   const addService = () => {
     if (isReadOnly) return;
@@ -61,17 +61,19 @@ useEffect(() => {
     let updatedServices: SelectedService[] = [];
 
     setServices((prev) => {
-  const existing = prev.find((s) => s.id === selectedServiceId);
-    updatedServices = existing
-      ? prev.map((s) =>
-          s.id === selectedServiceId ? { ...s, quantity: s.quantity + quantity } : s
-        )
-      : [...prev, { ...serviceItem, quantity }];
-    return updatedServices;
+      const existing = prev.find((s) => s.id === selectedServiceId);
+      updatedServices = existing
+        ? prev.map((s) =>
+            s.id === selectedServiceId ? { ...s, quantity: s.quantity + quantity } : s
+          )
+        : [...prev, { ...serviceItem, quantity }];
+      return updatedServices;
     });
-  setTimeout(() => {
-    localStorage.setItem(storageKey, JSON.stringify(updatedServices));
-  }, 0);
+
+    setTimeout(() => {
+      localStorage.setItem(storageKey, JSON.stringify(updatedServices));
+    }, 0);
+
     setSelectedServiceId("");
     setQuantity(1);
   };
@@ -87,7 +89,6 @@ useEffect(() => {
     if (isReadOnly) return;
     setServices((prev) => prev.filter((s) => s.id !== id));
   };
-
 
   const servicesTotal = services.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
   const grandTotal = servicesTotal - booking.deposit_amount;
@@ -122,23 +123,23 @@ useEffect(() => {
   };
 
   return (
-    <div className="border p-4 rounded-xl shadow bg-white mt-4">
-      <h3 className="text-xl font-bold text-indigo-700 mb-3 flex items-center gap-2">
+    <div className={styles.summaryCard}>
+      <h3 className={styles.title}>
         📄 Thông tin Booking
       </h3>
 
       {isReadOnly && (
-        <div className="text-sm text-yellow-800 bg-yellow-100 border border-yellow-300 rounded p-2 mb-3">
+        <div className={styles.warning}>
           ✅ Booking đã hoàn tất. Không thể chỉnh sửa.
         </div>
       )}
 
-      <div className="text-sm space-y-1 text-gray-800">
+      <div className={styles.info}>
         <p>⏰ <b>Thời gian:</b> {new Date(booking.date_time).toLocaleString("vi-VN")}</p>
         <p>🙍 <b>Hội viên:</b> {memberName}</p>
         <p>🔖 <b>Loại:</b> {booking.type}</p>
         <p>🕒 <b>Thời lượng:</b> {booking.duration} phút</p>
-        <p>💵 <b>Tiền cọc:</b> {booking.deposit_amount.toLocaleString()} VNĐ</p>
+        <p>💵 <b>Tiền cọc:</b> {booking.deposit_amount.toLocaleString("vi-VN")} VNĐ</p>
       </div>
 
       {booking.players?.length > 0 && (
@@ -174,11 +175,11 @@ useEffect(() => {
         )}
 
         {(showServices || isReadOnly) && (
-          <div className="mt-3 space-y-3">
+          <div className="mt-3">
             {!isReadOnly && (
-              <div className="flex gap-2 items-center">
+              <div className={styles.addServiceRow}>
                 <select
-                  className="flex-1 border px-3 py-2 rounded text-sm"
+                  className={styles.select}
                   value={selectedServiceId}
                   onChange={(e) => setSelectedServiceId(e.target.value)}
                 >
@@ -191,7 +192,7 @@ useEffect(() => {
                 </select>
                 <input
                   type="number"
-                  className="w-20 border px-2 py-2 rounded text-sm text-center"
+                  className={styles.inputQty}
                   min={1}
                   value={quantity}
                   onChange={(e) => setQuantity(Number(e.target.value))}
@@ -206,39 +207,37 @@ useEffect(() => {
             )}
 
             {services.length > 0 && (
-              <table className="w-full text-sm mt-3 border rounded shadow-sm">
+              <table className={styles.table}>
                 <thead className="bg-gray-100 text-left">
                   <tr>
-                    <th className="p-2">Dịch vụ</th>
-                    <th className="p-2 text-center">Số lượng</th>
-                    <th className="p-2 text-right">Đơn giá</th>
-                    <th className="p-2 text-right">Thành tiền</th>
-                    {!isReadOnly && <th className="p-2 text-right">Xoá</th>}
+                    <th className={styles.th}>Dịch vụ</th>
+                    <th className={styles.th}>Số lượng</th>
+                    <th className={styles.th}>Đơn giá</th>
+                    <th className={styles.th}>Thành tiền</th>
+                    {!isReadOnly && <th className={styles.th}>Xoá</th>}
                   </tr>
                 </thead>
                 <tbody>
                   {services.map((s) => (
-                    <tr key={s.id} className="border-t">
-                      <td className="p-2">{s.name}</td>
-                      <td className="p-2 text-center">
+                    <tr key={s.id}>
+                      <td className={styles.td}>{s.name}</td>
+                      <td className={styles.td}>
                         {isReadOnly ? (
-                          <span>{s.quantity}</span>
+                          s.quantity
                         ) : (
                           <input
                             type="number"
-                            className="w-14 border rounded px-1 text-center"
+                            className={styles.inputQty}
                             value={s.quantity}
                             min={1}
                             onChange={(e) => updateQuantity(s.id, Number(e.target.value))}
                           />
                         )}
                       </td>
-                      <td className="p-2 text-right">{s.unit_price.toLocaleString()}đ</td>
-                      <td className="p-2 text-right">
-                        {(s.quantity * s.unit_price).toLocaleString()}đ
-                      </td>
+                      <td className={styles.td} style={{ textAlign: "right" }}>{s.unit_price.toLocaleString("vi-VN")}đ</td>
+                      <td className={styles.td} style={{ textAlign: "right" }}>{(s.quantity * s.unit_price).toLocaleString("vi-VN")}đ</td>
                       {!isReadOnly && (
-                        <td className="p-2 text-right">
+                        <td className={styles.td} style={{ textAlign: "right" }}>
                           <button
                             className="text-red-600 hover:text-red-800 text-xs"
                             onClick={() => removeService(s.id)}
@@ -256,11 +255,11 @@ useEffect(() => {
         )}
       </div>
 
-      <div className="mt-6 text-right text-sm text-gray-800 space-y-1 border-t pt-4">
-        <p>➕ Dịch vụ: <b>{servicesTotal.toLocaleString()}đ</b></p>
-        <p>➖ Tiền cọc: <b>-{booking.deposit_amount.toLocaleString()}đ</b></p>
+      <div className={styles.total}>
+        <p>➕ Dịch vụ: <b>{servicesTotal.toLocaleString("vi-VN")}đ</b></p>
+        <p>➖ Tiền cọc: <b>-{booking.deposit_amount.toLocaleString("vi-VN")}đ</b></p>
         <p className="text-lg font-bold text-indigo-700 mt-2">
-          💰 Tổng thanh toán: {grandTotal.toLocaleString()}đ
+          💰 Tổng thanh toán: {grandTotal.toLocaleString("vi-VN")}đ
         </p>
       </div>
 

@@ -41,3 +41,13 @@ export const getBookingsByDate = async (date: string) => {
   const res = await api.get(`/bookings/by-date?date_str=${date}`);
   return res.data;
 };
+
+// ✅ Xóa booking
+export const deleteBooking = async (id: string) => {
+  const res = await fetch(`https://csa-backend-v90k.onrender.com/api/bookings/${id}`, {
+    method: "DELETE",
+  });
+
+  if (!res.ok) throw new Error("Failed to delete booking");
+  return true;
+};

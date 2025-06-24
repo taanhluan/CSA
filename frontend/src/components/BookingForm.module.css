@@ -1,0 +1,289 @@
+/* Layout chính */
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: 2rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+/* Card trắng */
+.card {
+  background-color: #ffffff;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Tiêu đề section */
+.sectionTitle {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #4f46e5;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Label và input form */
+.label {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  display: block;
+  color: #374151;
+}
+
+.input,
+.select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  background-color: #f9fafb;
+}
+
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  background-color: #fff;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .row {
+    flex-direction: row;
+  }
+}
+
+.w50 {
+  flex: 1;
+}
+
+.playerRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 640px) {
+  .playerRow {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.addPlayer {
+  color: #4f46e5;
+  font-size: 0.95rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 1.5rem;
+}
+
+.saveButton {
+  width: 100%;
+  background: #4f46e5;
+  color: white;
+  padding: 0.9rem;
+  font-size: 1rem;
+  border: none;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.saveButton:hover {
+  background: #4338ca;
+}
+
+/* Booking theo ngày */
+.bookingCard {
+  background-color: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+@media (min-width: 1280px) {
+  .bookingCard {
+    margin-top: 0;
+  }
+}
+
+.bookingCard h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #4f46e5;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.wrapFilterRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 640px) {
+  .wrapFilterRow {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+}
+
+.dateFilter label {
+  font-weight: 500;
+  margin-right: 0.5rem;
+  color: #374151;
+}
+
+.dateFilter input,
+.dateFilter select {
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid #d1d5db;
+  background-color: #f9fafb;
+  font-size: 0.9rem;
+}
+
+.dateFilter input:focus,
+.dateFilter select:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.backToToday {
+  font-size: 0.85rem;
+  color: #2563eb;
+  text-decoration: underline;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.bookingList {
+  margin-top: 1rem;
+  max-height: 300px;
+  overflow-y: auto;
+  font-size: 0.95rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Layout mỗi item */
+.bookingItemRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background-color: #fdfdfd;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+.bookingItemRow:hover {
+  background-color: #eef2ff;
+}
+
+.bookingInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.bookingMeta {
+  font-size: 0.85rem;
+  color: #374151;
+  margin-bottom: 0.3rem;
+}
+
+.bookingPlayer {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.bookingActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 120px;
+}
+
+.statusBadge {
+  background-color: #fef3c7;
+  color: #92400e;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.deleteButton {
+  font-size: 12px;
+  padding: 2px 6px;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+  background-color: #fef2f2;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.deleteButton:hover {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
