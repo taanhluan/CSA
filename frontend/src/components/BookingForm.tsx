@@ -17,7 +17,7 @@ interface Member {
 
 const BookingForm = () => {
   const [members, setMembers] = useState<Member[]>([]);
-  const [selectedMemberId, setSelectedMemberId] = useState("");
+  const [selectedMemberId, setSelectedMemberId] = useState<string | undefined>();
   const [type, setType] = useState<"individual" | "group">("individual");
   const [dateTime, setDateTime] = useState(() => new Date().toISOString().slice(0, 16));
   const [duration] = useState(60);
@@ -48,12 +48,10 @@ const BookingForm = () => {
   }, [loadBookings]);
 
   const handleSave = async () => {
-    if (!selectedMemberId) return toast.error("❗ Vui lòng chọn hội viên");
-
     try {
       setLoading(true);
       const bookingData = await createBooking({
-        member_id: selectedMemberId,
+        member_id: selectedMemberId || undefined, // ✅ cho phép khách vãng lai
         type,
         date_time: new Date(dateTime).toISOString(),
         duration,
@@ -62,7 +60,7 @@ const BookingForm = () => {
       });
       toast.success("✅ Booking đã được tạo!");
       setRecentBooking(bookingData);
-      setSelectedMemberId("");
+      setSelectedMemberId(undefined);
       setType("individual");
       setDateTime(new Date().toISOString().slice(0, 16));
       setDeposit(0);
@@ -88,7 +86,8 @@ const BookingForm = () => {
   };
 
   const filteredBookings = todayBookings.filter(b => statusFilter ? b.status === statusFilter : true);
-  const getMemberName = (id: string) => members.find(m => m.id === id)?.full_name || id;
+  const getMemberName = (id: string | undefined) =>
+    members.find(m => m.id === id)?.full_name || "Khách vãng lai";
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -99,10 +98,10 @@ const BookingForm = () => {
           <label className="block font-medium mb-1">Chọn hội viên</label>
           <select
             className="w-full px-3 py-2 border rounded"
-            value={selectedMemberId}
-            onChange={(e) => setSelectedMemberId(e.target.value)}
+            value={selectedMemberId || ""}
+            onChange={(e) => setSelectedMemberId(e.target.value || undefined)}
           >
-            <option value="">-- Chọn hội viên --</option>
+            <option value="">-- Khách vãng lai --</option>
             {members.map((m) => (
               <option key={m.id} value={m.id}>{m.full_name}</option>
             ))}
@@ -139,8 +138,8 @@ const BookingForm = () => {
             inputMode="numeric"
             value={deposit.toLocaleString("vi-VN")}
             onChange={(e) => {
-              let raw = e.target.value.replace(/[^\d]/g, ""); // chỉ giữ số
-              raw = raw.replace(/^0+/, ""); // loại bỏ 0 đầu
+              let raw = e.target.value.replace(/[^\d]/g, "");
+              raw = raw.replace(/^0+/, "");
               if (raw === "") raw = "0";
               const num = parseInt(raw);
               if (!isNaN(num)) setDeposit(num);

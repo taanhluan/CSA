@@ -12,9 +12,11 @@ class RoleEnum(str, enum.Enum):
 
 class User(Base):
     __tablename__ = "users"
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String, nullable=False)
-    phone = Column(String, nullable=False)
+    phone = Column(String, unique=True, index=True, nullable=False)
     email = Column(String, nullable=True)
+    password_hash = Column(String, nullable=False)  # ✅ Mật khẩu mã hoá
     role = Column(Enum(RoleEnum), nullable=False, default=RoleEnum.customer)
     created_at = Column(DateTime, default=datetime.utcnow)

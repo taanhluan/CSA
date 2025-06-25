@@ -2,8 +2,24 @@ services:
   - type: web
     name: csa-backend
     env: python
+    plan: free
+    region: singapore
     buildCommand: "pip install -r requirements.txt"
     startCommand: "uvicorn main:app --host=0.0.0.0 --port=$PORT"
-    plan: free
     autoDeploy: true
-    region: vietnam
+
+    healthCheckPath: /
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        sync: false  # nhập DB URL thủ công trong Render dashboard
+      - key: SECRET_KEY
+        sync: false  # nếu bạn có dùng bảo mật JWT hoặc password hashing
+
+# ⏰ Tùy chọn: cron job giữ app luôn "awake" (prevent sleep)
+jobs:
+  - name: keep-alive
+    type: cron
+    schedule: "*/15 * * * *"  # every 15 minutes
+    command: curl https://csa-backend-v90k.onrender.com/

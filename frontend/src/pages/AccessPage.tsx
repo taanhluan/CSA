@@ -13,6 +13,7 @@ interface User {
 
 const AccessPage = () => {
   const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
   const [users, setUsers] = useState<User[]>([]);
   const [fetchingUsers, setFetchingUsers] = useState(false);
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ const AccessPage = () => {
       const res = await fetch("https://csa-backend-v90k.onrender.com/api/users/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify({ phone, password }),
       });
       if (!res.ok) throw new Error("Login failed");
       const user = await res.json();
@@ -38,24 +39,55 @@ const AccessPage = () => {
       setCurrentUser(user);
       navigate("/");
     } catch (err) {
-      alert("Không tìm thấy người dùng!");
+      alert("Số điện thoại hoặc mật khẩu không đúng!");
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("currentUser");
+    setCurrentUser(null);
+  };
+
+  const handleRoleToggle = async (userId: string) => {
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+    const newRole = user.role === "staff" ? "admin" : "staff";
+    try {
+      await fetch(`https://csa-backend-v90k.onrender.com/api/users/${userId}/role`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: newRole }),
+      });
+      alert("✅ Đã cập nhật quyền");
+      setFetchingUsers(false);
+    } catch (err) {
+      alert("❌ Không thể đổi quyền");
+    }
+  };
+
+  const handlePasswordReset = async (userId: string) => {
+    const newPassword = prompt("🔐 Nhập mật khẩu mới:");
+    if (!newPassword) return;
+    try {
+      await fetch(`https://csa-backend-v90k.onrender.com/api/users/${userId}/password`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: newPassword }),
+      });
+      alert("✅ Mật khẩu đã được cập nhật");
+    } catch (err) {
+      alert("❌ Lỗi khi reset mật khẩu");
     }
   };
 
   useEffect(() => {
     if (!currentUser || currentUser.role !== "admin" || fetchingUsers) return;
-
     setFetchingUsers(true);
     fetch("https://csa-backend-v90k.onrender.com/api/users")
       .then((res) => res.json())
       .then((data) => setUsers(data))
       .catch((err) => console.error("Fetch users failed:", err));
   }, [currentUser, fetchingUsers]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("currentUser");
-    setCurrentUser(null);
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-orange-900 text-white flex items-center justify-center px-4 py-10">
@@ -75,6 +107,13 @@ const AccessPage = () => {
             placeholder="📱 Nhập số điện thoại"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
+          />
+          <input
+            type="password"
+            className="border border-gray-300 px-4 py-3 w-full rounded-lg focus:ring-2 focus:ring-orange-500 text-center text-lg tracking-wider"
+            placeholder="🔑 Nhập mật khẩu"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
           />
           <button
             onClick={handleLogin}
@@ -116,6 +155,7 @@ const AccessPage = () => {
                 <th className="p-2">Email</th>
                 <th className="p-2">Role</th>
                 <th className="p-2">Ngày tạo</th>
+                <th className="p-2">Hành động</th>
               </tr>
             </thead>
             <tbody>
@@ -125,8 +165,14 @@ const AccessPage = () => {
                   <td className="p-2">{u.phone}</td>
                   <td className="p-2">{u.email || "-"}</td>
                   <td className="p-2 font-semibold text-indigo-600">{u.role}</td>
-                  <td className="p-2">
-                    {new Date(u.created_at).toLocaleString("vi-VN")}
+                  <td className="p-2">{new Date(u.created_at).toLocaleString("vi-VN")}</td>
+                  <td className="p-2 space-x-2">
+                    <button onClick={() => handleRoleToggle(u.id)} className="text-xs text-blue-600 underline">
+                      🔁 Role
+                    </button>
+                    <button onClick={() => handlePasswordReset(u.id)} className="text-xs text-red-600 underline">
+                      🔑 Reset
+                    </button>
                   </td>
                 </tr>
               ))}
