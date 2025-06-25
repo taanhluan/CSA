@@ -132,6 +132,6 @@ wcwidth==0.2.13
 webcolors==24.11.1
 webencodings==0.5.1
 websocket-client==1.8.0
-pydantic[email]
-pytz
-passlib[bcrypt]
+pydantic[email]==2.11.5
+bcrypt==3.2.2
+passlib==1.7.4
