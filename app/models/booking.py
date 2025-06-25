@@ -1,6 +1,4 @@
-# app/models/booking.py
-
-from sqlalchemy import Column, String, Integer, Enum, ForeignKey, DateTime, Numeric, Boolean
+from sqlalchemy import Column, String, Integer, Enum, ForeignKey, DateTime, Numeric, Boolean, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
@@ -36,6 +34,11 @@ class Booking(Base):
     status = Column(Enum(BookingStatus), default=BookingStatus.booked)
     deposit_amount = Column(Numeric, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+    grand_total = Column(Integer, nullable=True)
+    discount = Column(Integer, default=0)
+    payment_method = Column(String, default="cash")
+    log_history = Column(Text, nullable=True)
 
     # 👥 Liên kết đến danh sách người chơi
     players = relationship(

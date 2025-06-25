@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict
-from typing import List, Optional
+from typing import List, Optional, Literal
 from uuid import UUID
 from datetime import datetime
 from enum import Enum
@@ -67,8 +67,17 @@ class BookingResponse(BaseModel):
     created_at: datetime
 
     players: List[BookingPlayerSchema] = []
-
-    # ✅ Thêm danh sách dịch vụ đã dùng
     services: List[BookingServiceItem] = []
 
     model_config = ConfigDict(from_attributes=True)
+
+# ------------------------------
+# BOOKING COMPLETE INPUT SCHEMA
+# ------------------------------
+
+class BookingCompleteInput(BaseModel):
+    services: List[BookingServiceItem]
+    grand_total: int
+    discount: int
+    payment_method: Literal["cash", "bank"]
+    log: str

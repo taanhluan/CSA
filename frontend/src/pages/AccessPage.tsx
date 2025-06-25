@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { Eye, EyeOff } from "lucide-react"; // dùng icon mắt
 
 interface User {
   id: string;
@@ -14,8 +15,10 @@ interface User {
 const AccessPage = () => {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // 👁 toggle password
   const [users, setUsers] = useState<User[]>([]);
   const [fetchingUsers, setFetchingUsers] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
   const { currentUser, setCurrentUser } = useAuth();
 
@@ -26,20 +29,31 @@ const AccessPage = () => {
   }, [currentUser, navigate]);
 
   const handleLogin = async () => {
+    if (!phone || !password) {
+      setError("⚠️ Vui lòng nhập số điện thoại và mật khẩu");
+      return;
+    }
+
     try {
       const res = await fetch("https://csa-backend-v90k.onrender.com/api/users/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, password: "dummy" }),
+        body: JSON.stringify({ phone, password }),
       });
+
       if (!res.ok) throw new Error("Login failed");
       const user = await res.json();
       localStorage.setItem("currentUser", JSON.stringify(user));
       setCurrentUser(user);
+      setError("");
       navigate("/");
-    } catch (err) {
-      alert("Số điện thoại hoặc mật khẩu không đúng!");
+    } catch {
+      setError("❌ Số điện thoại hoặc mật khẩu không đúng!");
     }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") handleLogin();
   };
 
   const handleLogout = () => {
@@ -58,8 +72,8 @@ const AccessPage = () => {
         body: JSON.stringify({ role: newRole }),
       });
       alert("✅ Đã cập nhật quyền");
-      setFetchingUsers(true); // Trigger reload
-    } catch (err) {
+      setFetchingUsers(true);
+    } catch {
       alert("❌ Không thể đổi quyền");
     }
   };
@@ -77,8 +91,8 @@ const AccessPage = () => {
         body: JSON.stringify({ password: newPassword }),
       });
       alert("✅ Mật khẩu đã được cập nhật");
-      setFetchingUsers(true); // Trigger reload
-    } catch (err) {
+      setFetchingUsers(true);
+    } catch {
       alert("❌ Lỗi khi reset mật khẩu");
     }
   };
@@ -86,13 +100,12 @@ const AccessPage = () => {
   useEffect(() => {
     if (!currentUser || currentUser.role !== "admin" || !fetchingUsers) return;
     fetch("https://csa-backend-v90k.onrender.com/api/users")
-      .then((res) => res.json())
-      .then((data) => {
+      .then(res => res.json())
+      .then(data => {
         setUsers(data);
         setFetchingUsers(false);
       })
-      .catch((err) => {
-        console.error("Fetch users failed:", err);
+      .catch(() => {
         setFetchingUsers(false);
       });
   }, [currentUser, fetchingUsers]);
@@ -116,13 +129,23 @@ const AccessPage = () => {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
           />
-          <input
-            type="password"
-            className="border border-gray-300 px-4 py-3 w-full rounded-lg focus:ring-2 focus:ring-orange-500 text-center text-lg tracking-wider"
-            placeholder="🔑 Nhập mật khẩu"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              className="border border-gray-300 px-4 py-3 w-full rounded-lg focus:ring-2 focus:ring-orange-500 text-center text-lg tracking-wider pr-10"
+              placeholder="🔑 Nhập mật khẩu"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={handleKeyDown} // ⌨ Enter để login
+            />
+            <div
+              className="absolute top-3 right-3 cursor-pointer text-gray-500"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </div>
+          </div>
+          {error && <p className="text-center text-red-600 text-sm">{error}</p>}
           <button
             onClick={handleLogin}
             className="bg-orange-600 hover:bg-orange-700 transition-all duration-150 text-white px-6 py-3 w-full rounded-lg text-lg font-semibold shadow-md"
@@ -143,6 +166,7 @@ const AccessPage = () => {
           </button>
         </div>
       ) : (
+        // 👑 Trang quản lý người dùng
         <div className="bg-white text-gray-800 shadow-xl rounded-xl p-8 w-full max-w-5xl">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-orange-700 flex items-center gap-2">

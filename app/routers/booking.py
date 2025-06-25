@@ -8,7 +8,7 @@ import logging
 
 from app.database import SessionLocal
 from app.models.booking import Booking, BookingPlayer, BookingService, BookingStatus
-from app.schemas.booking import BookingCreate, BookingResponse
+from app.schemas.booking import BookingCreate, BookingResponse, BookingCompleteInput
 
 router = APIRouter(prefix="/bookings", tags=["Bookings"])
 
@@ -118,33 +118,47 @@ def get_pending_bookings(db: Session = Depends(get_db)):
 # ✅ Hoàn tất thanh toán (update status = done + lưu dịch vụ)
 # ------------------------------
 @router.post("/{booking_id}/complete")
-def complete_booking(booking_id: UUID, payload: dict, db: Session = Depends(get_db)):
+def complete_booking(booking_id: UUID, payload: BookingCompleteInput, db: Session = Depends(get_db)):
     try:
-        booking = db.query(Booking).get(booking_id)
+        booking = db.query(Booking).filter(Booking.id == booking_id).first()
         if not booking:
             raise HTTPException(status_code=404, detail="Booking not found")
 
+        # Xóa dịch vụ cũ nếu có
         db.query(BookingService).filter(BookingService.booking_id == booking_id).delete()
 
-        services = payload.get("services", [])
-        for s in services:
+        # Thêm dịch vụ mới
+        for s in payload.services:
             db.add(BookingService(
                 id=uuid4(),
                 booking_id=booking_id,
-                name=s["name"],
-                unit_price=s["unit_price"],
-                quantity=s["quantity"]
+                service_id=s.id,
+                name=s.name,
+                unit_price=s.unit_price,
+                quantity=s.quantity
             ))
 
+        # Cập nhật thông tin booking
         booking.status = BookingStatus.done
-        booking.grand_total = payload.get("grand_total", 0)
+        booking.grand_total = payload.grand_total
+        booking.discount = payload.discount
+        booking.payment_method = payload.payment_method
+
+        # Ghi log vào log_history
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        new_log = f"[{timestamp}] {payload.log}"
+        if booking.log_history:
+            booking.log_history += f"\n{new_log}"
+        else:
+            booking.log_history = new_log
 
         db.commit()
-        return {"message": "Booking marked as done with services"}
+        return {"message": "Booking marked as done with services, discount, and payment method"}
 
     except Exception as e:
         logger.error(f"❌ Error completing booking {booking_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
+
 # ------------------------------
 # ✅ Xoá booking (chỉ cho phép xoá nếu chưa thanh toán)
 # ------------------------------

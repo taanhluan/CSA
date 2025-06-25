@@ -1,47 +1,31 @@
-// src/pages/Dashboard.tsx
 import { useEffect, useState } from "react";
 import StatCard from "../components/StatCard";
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
-    totalBookings: 0,
-    pending: 0,
-    members: 0,
+    totalBookingsToday: 0,
+    pendingBookings: 0,
+    membersCount: 0,
+    completedBookingsToday: 0,
+    revenueToday: 0,
   });
-
-  const safeJson = async (res: Response, fallback: any) => {
-    try {
-      if (!res.ok) {
-        console.error(`❌ API ${res.url} failed with status ${res.status}`);
-        return fallback;
-      }
-      return await res.json();
-    } catch (err) {
-      console.error(`❌ Error parsing JSON from ${res.url}:`, err);
-      return fallback;
-    }
-  };
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [bookingsRes, pendingRes, membersRes] = await Promise.all([
-          fetch("http://localhost:8000/api/bookings/today"),
-          fetch("http://localhost:8000/api/bookings/pending"),
-          fetch("http://localhost:8000/api/members/count"),
-        ]);
-
-        const bookings = await safeJson(bookingsRes, []);
-        const pending = await safeJson(pendingRes, []);
-        const members = await safeJson(membersRes, { count: 0 });
+        const res = await fetch("http://localhost:8000/api/reports/daily-summary");
+        if (!res.ok) throw new Error(`API failed: ${res.status}`);
+        const data = await res.json();
 
         setStats({
-          totalBookings: bookings.length,
-          pending: pending.length,
-          members: members.count,
+          totalBookingsToday: data.total_bookings,
+          pendingBookings: data.pending_bookings,
+          membersCount: data.members,
+          completedBookingsToday: data.completed_bookings,
+          revenueToday: data.revenue,
         });
       } catch (error) {
-        console.error("❌ Lỗi khi tải thống kê dashboard:", error);
+        console.error("❌ Lỗi khi tải dữ liệu thống kê:", error);
       }
     };
 
@@ -49,10 +33,40 @@ const Dashboard = () => {
   }, []);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <StatCard title="Tổng booking hôm nay" value={stats.totalBookings} />
-      <StatCard title="Chưa Checkout" value={stats.pending} color="bg-red-500" />
-      <StatCard title="Tổng số hội viên" value={stats.members} color="bg-purple-500" />
+    <div className="px-4 py-6">
+      <h2 className="text-2xl font-semibold mb-6 text-gray-800">📊 Báo cáo hôm nay</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard
+          title="📅 Tổng booking hôm nay"
+          value={stats.totalBookingsToday}
+          color="bg-blue-500"
+          icon="📅"
+        />
+        <StatCard
+          title="⏳ Chưa hoàn tất"
+          value={stats.pendingBookings}
+          color="bg-red-500"
+          icon="⏳"
+        />
+        <StatCard
+          title="👥 Hội viên hiện tại"
+          value={stats.membersCount}
+          color="bg-purple-500"
+          icon="👥"
+        />
+        <StatCard
+          title="✅ Đã thanh toán"
+          value={stats.completedBookingsToday}
+          color="bg-green-500"
+          icon="✅"
+        />
+        <StatCard
+          title="💰 Doanh thu hôm nay"
+          value={`${stats.revenueToday.toLocaleString()}₫`}
+          color="bg-gradient-to-r from-yellow-400 to-orange-500 text-black"
+          icon="💰"
+        />
+      </div>
     </div>
   );
 };

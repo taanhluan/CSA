@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
+from uuid import UUID
+
 from app.database import SessionLocal
 from app.models.user import User
 from app.schemas.user import (
     UserLogin, UserResponse, UserCreate, RoleUpdate, PasswordUpdate
 )
-from app.utils.security import verify_password, hash_password
 from app.utils.security import hash_password, verify_password
-from uuid import UUID
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -24,10 +24,9 @@ def get_db():
 @router.post("/login", response_model=UserResponse)
 def login_user(data: UserLogin, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.phone == data.phone).first()
-    if not user:
-        raise HTTPException(status_code=401, detail="Số điện thoại không đúng")
+    if not user or not verify_password(data.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Số điện thoại hoặc mật khẩu không đúng")
     return user
-
 
 # ✅ Tạo user mới
 @router.post("/", response_model=UserResponse)

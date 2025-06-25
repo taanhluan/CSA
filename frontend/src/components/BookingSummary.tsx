@@ -1,4 +1,3 @@
-// src/components/BookingSummary.tsx
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import styles from "./BookingSummary.module.css";
@@ -26,6 +25,9 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
   const [quantity, setQuantity] = useState(1);
   const [services, setServices] = useState<SelectedService[]>([]);
   const [availableServices, setAvailableServices] = useState<ServiceItem[]>([]);
+  const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [discount, setDiscount] = useState(0);
+  const [discountInput, setDiscountInput] = useState("0");
 
   const storageKey = `services_${booking.id}`;
 
@@ -52,6 +54,10 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
       setServices([]);
     }
   }, [booking.id, booking.services, isReadOnly]);
+
+  useEffect(() => {
+    setDiscountInput(discount.toLocaleString("vi-VN"));
+  }, [discount]);
 
   const addService = () => {
     if (isReadOnly) return;
@@ -91,7 +97,7 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
   };
 
   const servicesTotal = services.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
-  const grandTotal = servicesTotal - booking.deposit_amount;
+  const grandTotal = servicesTotal - booking.deposit_amount - discount;
 
   const handleCompleteBooking = async () => {
     if (isReadOnly) return;
@@ -109,6 +115,11 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
               quantity: s.quantity,
             })),
             grand_total: grandTotal,
+            payment_method: paymentMethod,
+            discount: discount,
+            log: `Đã thanh toán bằng ${
+              paymentMethod === "cash" ? "Tiền mặt" : "Chuyển khoản"
+            } - Giảm giá ${discount.toLocaleString("vi-VN")}đ`,
           }),
         }
       );
@@ -124,9 +135,7 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
 
   return (
     <div className={styles.summaryCard}>
-      <h3 className={styles.title}>
-        📄 Thông tin Booking
-      </h3>
+      <h3 className={styles.title}>📄 Thông tin Booking</h3>
 
       {isReadOnly && (
         <div className={styles.warning}>
@@ -234,8 +243,12 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
                           />
                         )}
                       </td>
-                      <td className={styles.td} style={{ textAlign: "right" }}>{s.unit_price.toLocaleString("vi-VN")}đ</td>
-                      <td className={styles.td} style={{ textAlign: "right" }}>{(s.quantity * s.unit_price).toLocaleString("vi-VN")}đ</td>
+                      <td className={styles.td} style={{ textAlign: "right" }}>
+                        {s.unit_price.toLocaleString("vi-VN")}đ
+                      </td>
+                      <td className={styles.td} style={{ textAlign: "right" }}>
+                        {(s.quantity * s.unit_price).toLocaleString("vi-VN")}đ
+                      </td>
                       {!isReadOnly && (
                         <td className={styles.td} style={{ textAlign: "right" }}>
                           <button
@@ -255,9 +268,41 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
         )}
       </div>
 
+      {!isReadOnly && (
+        <div className="mt-4 space-y-3">
+          <div className="flex items-center gap-4">
+            <label className="text-sm font-medium">💳 Phương thức thanh toán:</label>
+            <select
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              className="border rounded px-2 py-1 text-sm"
+            >
+              <option value="cash">Tiền mặt</option>
+              <option value="bank">Chuyển khoản</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <label className="text-sm font-medium">🔻 Giảm giá (VNĐ):</label>
+            <input
+              type="text"
+              value={discountInput}
+              onChange={(e) => {
+                const raw = e.target.value.replace(/\D/g, "");
+                const parsed = Number(raw || "0");
+                setDiscount(parsed);
+                setDiscountInput(parsed.toLocaleString("vi-VN"));
+              }}
+              className="border rounded px-2 py-1 text-sm w-32 text-right"
+            />
+          </div>
+        </div>
+      )}
+
       <div className={styles.total}>
         <p>➕ Dịch vụ: <b>{servicesTotal.toLocaleString("vi-VN")}đ</b></p>
         <p>➖ Tiền cọc: <b>-{booking.deposit_amount.toLocaleString("vi-VN")}đ</b></p>
+        <p>➖ Giảm giá: <b>-{discount.toLocaleString("vi-VN")}đ</b></p>
         <p className="text-lg font-bold text-indigo-700 mt-2">
           💰 Tổng thanh toán: {grandTotal.toLocaleString("vi-VN")}đ
         </p>
