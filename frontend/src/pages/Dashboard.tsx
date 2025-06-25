@@ -13,7 +13,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await fetch("http://localhost:8000/api/reports/daily-summary");
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/reports/daily-summary`);
         if (!res.ok) throw new Error(`API failed: ${res.status}`);
         const data = await res.json();
 
