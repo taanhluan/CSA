@@ -17,7 +17,6 @@ const AccessPage = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [fetchingUsers, setFetchingUsers] = useState(false);
   const navigate = useNavigate();
-
   const { currentUser, setCurrentUser } = useAuth();
 
   useEffect(() => {
@@ -31,7 +30,7 @@ const AccessPage = () => {
       const res = await fetch("https://csa-backend-v90k.onrender.com/api/users/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, password }),
+        body: JSON.stringify({ phone, password: "dummy" }),
       });
       if (!res.ok) throw new Error("Login failed");
       const user = await res.json();
@@ -59,7 +58,7 @@ const AccessPage = () => {
         body: JSON.stringify({ role: newRole }),
       });
       alert("✅ Đã cập nhật quyền");
-      setFetchingUsers(false);
+      setFetchingUsers(true); // Trigger reload
     } catch (err) {
       alert("❌ Không thể đổi quyền");
     }
@@ -67,7 +66,10 @@ const AccessPage = () => {
 
   const handlePasswordReset = async (userId: string) => {
     const newPassword = prompt("🔐 Nhập mật khẩu mới:");
-    if (!newPassword) return;
+    const confirmPassword = prompt("🔁 Xác nhận lại mật khẩu:");
+    if (!newPassword || newPassword !== confirmPassword) {
+      return alert("❌ Mật khẩu không khớp hoặc không hợp lệ");
+    }
     try {
       await fetch(`https://csa-backend-v90k.onrender.com/api/users/${userId}/password`, {
         method: "PATCH",
@@ -75,18 +77,24 @@ const AccessPage = () => {
         body: JSON.stringify({ password: newPassword }),
       });
       alert("✅ Mật khẩu đã được cập nhật");
+      setFetchingUsers(true); // Trigger reload
     } catch (err) {
       alert("❌ Lỗi khi reset mật khẩu");
     }
   };
 
   useEffect(() => {
-    if (!currentUser || currentUser.role !== "admin" || fetchingUsers) return;
-    setFetchingUsers(true);
+    if (!currentUser || currentUser.role !== "admin" || !fetchingUsers) return;
     fetch("https://csa-backend-v90k.onrender.com/api/users")
       .then((res) => res.json())
-      .then((data) => setUsers(data))
-      .catch((err) => console.error("Fetch users failed:", err));
+      .then((data) => {
+        setUsers(data);
+        setFetchingUsers(false);
+      })
+      .catch((err) => {
+        console.error("Fetch users failed:", err);
+        setFetchingUsers(false);
+      });
   }, [currentUser, fetchingUsers]);
 
   return (
