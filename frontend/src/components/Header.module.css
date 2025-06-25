@@ -1,0 +1,96 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background-color: white;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logoArea {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logo {
+  height: 32px;
+  width: 32px;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.accountSection {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.avatar {
+  cursor: pointer;
+  color: #374151;
+  transition: color 0.3s ease;
+}
+
+.avatar:hover {
+  color: #111827;
+}
+
+.dropdown {
+  position: absolute;
+  top: 110%;
+  right: 0;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  text-align: right;
+  width: 180px;
+}
+
+.name {
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.25rem;
+}
+
+.role {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+
+.logout {
+  font-size: 0.875rem;
+  color: white;
+  background-color: #ef4444;
+  border: none;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  width: 100%;
+}
+
+.logout:hover {
+  background-color: #dc2626;
+}
+
+@media (max-width: 640px) {
+  .title {
+    font-size: 1rem;
+  }
+
+  .logo {
+    height: 28px;
+    width: 28px;
+  }
+}

@@ -27,11 +27,16 @@ const DashboardLayout = () => {
   if (!isAllowed) return null;
 
   return (
-    <div className="flex h-screen">
-      <Sidebar />
-      <div className="flex-1 flex flex-col bg-gray-100">
+    <div className="flex h-screen bg-gray-100 overflow-hidden">
+      {/* Sidebar cố định bên trái */}
+      <div className="hidden md:block w-64 flex-shrink-0">
+        <Sidebar />
+      </div>
+
+      {/* Nội dung chính */}
+      <div className="flex flex-col flex-1 overflow-hidden">
         <Header />
-        <main className="p-6 overflow-auto">
+        <main className="flex-1 overflow-y-auto p-4">
           <Outlet />
         </main>
       </div>

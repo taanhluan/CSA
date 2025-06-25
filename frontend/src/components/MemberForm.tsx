@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { createMember } from "../api/members";
+import styles from "./MemberForm.module.css";
 
 const MemberForm = ({ onCreated }: { onCreated: () => void }) => {
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [email, setEmail] = useState("");
-  const [type, setType] = useState<"regular" | "vip">("regular"); // 👈 kiểu chính xác
+  const [type, setType] = useState<"regular" | "vip">("regular");
   const [message, setMessage] = useState("");
+  const [error, setError] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,6 +20,7 @@ const MemberForm = ({ onCreated }: { onCreated: () => void }) => {
         type,
       });
       setMessage("✅ Tạo hội viên thành công!");
+      setError(false);
       setFullName("");
       setPhoneNumber("");
       setEmail("");
@@ -26,15 +29,16 @@ const MemberForm = ({ onCreated }: { onCreated: () => void }) => {
     } catch (err) {
       console.error(err);
       setMessage("❌ Lỗi khi tạo hội viên.");
+      setError(true);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-4 shadow rounded space-y-3">
-      <h2 className="text-lg font-semibold">➕ Tạo hội viên mới</h2>
+    <form onSubmit={handleSubmit} className={styles.form}>
+      <h2 className={styles.heading}>➕ Tạo hội viên mới</h2>
 
       <input
-        className="w-full border px-3 py-2 rounded"
+        className={styles.input}
         type="text"
         placeholder="Tên hội viên"
         value={fullName}
@@ -43,7 +47,7 @@ const MemberForm = ({ onCreated }: { onCreated: () => void }) => {
       />
 
       <input
-        className="w-full border px-3 py-2 rounded"
+        className={styles.input}
         type="tel"
         placeholder="Số điện thoại"
         value={phoneNumber}
@@ -52,7 +56,7 @@ const MemberForm = ({ onCreated }: { onCreated: () => void }) => {
       />
 
       <input
-        className="w-full border px-3 py-2 rounded"
+        className={styles.input}
         type="email"
         placeholder="Email (tuỳ chọn)"
         value={email}
@@ -60,19 +64,21 @@ const MemberForm = ({ onCreated }: { onCreated: () => void }) => {
       />
 
       <select
-        className="w-full border px-3 py-2 rounded"
+        className={styles.input}
         value={type}
-        onChange={(e) => setType(e.target.value as "regular" | "vip")} // 👈 ép kiểu
+        onChange={(e) => setType(e.target.value as "regular" | "vip")}
       >
         <option value="regular">Hội viên thường</option>
         <option value="vip">Hội viên VIP</option>
       </select>
 
-      <button className="bg-blue-600 text-white px-4 py-2 rounded" type="submit">
+      <button className={styles.button} type="submit">
         💾 Lưu hội viên
       </button>
 
-      {message && <p>{message}</p>}
+      {message && (
+        <p className={error ? styles.error : styles.success}>{message}</p>
+      )}
     </form>
   );
 };

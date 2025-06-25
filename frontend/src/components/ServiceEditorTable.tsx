@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ServiceItem } from "../types";
+import styles from "./ServiceEditorTable.module.css";
 
 // Interface mở rộng cho editor
 interface ServiceEditorItem {

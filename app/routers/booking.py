@@ -32,7 +32,7 @@ def create_booking(data: BookingCreate, db: Session = Depends(get_db)):
         id=uuid4(),
         member_id=data.member_id,
         type=data.type,
-        date_time=data.date_time,  # FE gửi theo giờ VNT, backend lưu UTC (nên đồng bộ FE gửi đúng ISO 8601 với VNT)
+        date_time=data.date_time,
         duration=data.duration,
         deposit_amount=data.deposit_amount,
     )
@@ -61,7 +61,6 @@ def get_bookings_by_date(date_str: str, db: Session = Depends(get_db)):
     except:
         raise HTTPException(status_code=400, detail="Invalid date format. Use yyyy-mm-dd")
 
-    # Chuyển ngày theo giờ Việt Nam -> UTC để so sánh với DB (lưu UTC)
     local_tz = pytz.timezone("Asia/Ho_Chi_Minh")
     start_local = local_tz.localize(datetime.combine(target_date, time.min))
     end_local = local_tz.localize(datetime.combine(target_date, time.max))
@@ -71,11 +70,45 @@ def get_bookings_by_date(date_str: str, db: Session = Depends(get_db)):
 
     bookings = (
         db.query(Booking)
-        .options(
-            joinedload(Booking.players),
-            joinedload(Booking.services)
-        )
+        .options(joinedload(Booking.players), joinedload(Booking.services))
         .filter(Booking.date_time.between(start_utc, end_utc))
+        .order_by(Booking.date_time.asc())
+        .all()
+    )
+    return bookings
+
+# ------------------------------
+# ✅ Lấy danh sách booking hôm nay
+# ------------------------------
+@router.get("/today", response_model=List[BookingResponse])
+def get_today_bookings(db: Session = Depends(get_db)):
+    local_tz = pytz.timezone("Asia/Ho_Chi_Minh")
+    today = datetime.now(local_tz).date()
+
+    start_local = local_tz.localize(datetime.combine(today, time.min))
+    end_local = local_tz.localize(datetime.combine(today, time.max))
+
+    start_utc = start_local.astimezone(pytz.utc)
+    end_utc = end_local.astimezone(pytz.utc)
+
+    bookings = (
+        db.query(Booking)
+        .options(joinedload(Booking.players), joinedload(Booking.services))
+        .filter(Booking.date_time.between(start_utc, end_utc))
+        .order_by(Booking.date_time.asc())
+        .all()
+    )
+    return bookings
+
+# ------------------------------
+# ✅ Lấy booking chưa thanh toán
+# ------------------------------
+@router.get("/pending", response_model=List[BookingResponse])
+def get_pending_bookings(db: Session = Depends(get_db)):
+    bookings = (
+        db.query(Booking)
+        .options(joinedload(Booking.players), joinedload(Booking.services))
+        .filter(Booking.status != BookingStatus.done)
         .order_by(Booking.date_time.asc())
         .all()
     )
@@ -91,10 +124,8 @@ def complete_booking(booking_id: UUID, payload: dict, db: Session = Depends(get_
         if not booking:
             raise HTTPException(status_code=404, detail="Booking not found")
 
-        # Xóa dịch vụ cũ (nếu có)
         db.query(BookingService).filter(BookingService.booking_id == booking_id).delete()
 
-        # Thêm mới dịch vụ từ payload
         services = payload.get("services", [])
         for s in services:
             db.add(BookingService(
@@ -105,7 +136,6 @@ def complete_booking(booking_id: UUID, payload: dict, db: Session = Depends(get_
                 quantity=s["quantity"]
             ))
 
-        # Cập nhật status + grand_total
         booking.status = BookingStatus.done
         booking.grand_total = payload.get("grand_total", 0)
 
@@ -115,3 +145,22 @@ def complete_booking(booking_id: UUID, payload: dict, db: Session = Depends(get_
     except Exception as e:
         logger.error(f"❌ Error completing booking {booking_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
+# ------------------------------
+# ✅ Xoá booking (chỉ cho phép xoá nếu chưa thanh toán)
+# ------------------------------
+@router.delete("/{booking_id}")
+def delete_booking(booking_id: UUID, db: Session = Depends(get_db)):
+    booking = db.query(Booking).filter(Booking.id == booking_id).first()
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    if booking.status == BookingStatus.done:
+        raise HTTPException(status_code=400, detail="Cannot delete a completed booking")
+
+    # Xoá các liên kết phụ trước (BookingPlayer, BookingService)
+    db.query(BookingPlayer).filter(BookingPlayer.booking_id == booking_id).delete()
+    db.query(BookingService).filter(BookingService.booking_id == booking_id).delete()
+    
+    db.delete(booking)
+    db.commit()
+    return {"message": "Booking deleted successfully"}

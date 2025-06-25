@@ -1,8 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import Dashboard from "../pages/Dashboard";
 import Booking from "../pages/Booking";
-import Checkin from "../pages/Checkin";
-import Checkout from "../pages/Checkout";
 import Members from "../pages/Members";
 import Services from "../pages/Services";
 import AccessPage from "../pages/AccessPage";
@@ -29,8 +27,6 @@ function AppRoutes() {
 
         {/* Các route khác */}
         <Route path="/booking" element={<Booking />} />
-        <Route path="/checkin" element={<Checkin />} />
-        <Route path="/checkout" element={<Checkout />} />
         <Route path="/members" element={<Members />} />
         <Route path="/services" element={<Services />} />
       </Route>

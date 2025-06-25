@@ -1,20 +1,29 @@
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
+import styles from "./Sidebar.module.css";
 
 const Sidebar = () => {
+  const getLinkClass = ({ isActive }: { isActive: boolean }) =>
+    `${styles.navLink} ${isActive ? styles.active : ""}`;
+
   return (
-    <div className="w-64 bg-gray-900 text-white h-screen p-4">
-      <h1 className="text-xl font-bold mb-6">CSA</h1>
-      <nav className="flex flex-col space-y-2">
-        <Link to="/dashboard" className="hover:bg-gray-700 px-3 py-2 rounded">Dashboard</Link>
-        <Link to="/Booking" className="hover:bg-gray-700 px-3 py-2 rounded">Booking</Link>
-        <Link to="/members" className="hover:bg-gray-700 px-3 py-2 rounded">Members</Link>
-        
-        {/* ✅ THÊM DÒNG NÀY */}
-        <Link to="/services" className="hover:bg-gray-700 px-3 py-2 rounded">Dịch vụ</Link>
+    <aside className={styles.sidebar}>
+      <div className={styles.logo}>🏀 CSA System</div>
+      <nav className={styles.nav}>
+        <NavLink to="/" className={getLinkClass}>
+          📊 Dashboard
+        </NavLink>
+        <NavLink to="/booking" className={getLinkClass}>
+          📅 Booking
+        </NavLink>
+        <NavLink to="/members" className={getLinkClass}>
+          👥 Members
+        </NavLink>
+        <NavLink to="/services" className={getLinkClass}>
+          🛠️ Dịch vụ
+        </NavLink>
       </nav>
-    </div>
+    </aside>
   );
 };
 
 export default Sidebar;
-

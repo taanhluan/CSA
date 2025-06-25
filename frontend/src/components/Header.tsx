@@ -1,5 +1,6 @@
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import styles from "./Header.module.css";
 
 const Header = () => {
   const { currentUser, setCurrentUser } = useAuth();
@@ -8,19 +9,16 @@ const Header = () => {
   const handleLogout = () => {
     localStorage.removeItem("currentUser");
     setCurrentUser(null);
-    navigate("/access"); // 🔁 Chuyển về trang login
+    navigate("/access");
   };
 
   return (
-    <header className="flex justify-between items-center px-6 py-3 bg-white shadow">
-      <h1 className="text-xl font-semibold">Dashboard</h1>
+    <header className={styles.header}>
+      <h1 className={styles.title}>CSA Dashboard</h1>
       {currentUser && (
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-600">Welcome, {currentUser.name}</span>
-          <button
-            onClick={handleLogout}
-            className="text-sm text-red-600 hover:underline"
-          >
+        <div className={styles.userSection}>
+          <span className={styles.welcome}>👋 {currentUser.name}</span>
+          <button onClick={handleLogout} className={styles.logout}>
             Đăng xuất
           </button>
         </div>
