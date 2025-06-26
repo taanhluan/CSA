@@ -1,12 +1,9 @@
-import os
-from dotenv import load_dotenv
+from pydantic_settings import BaseSettings
 
-load_dotenv()  # Load .env từ root khi chạy local
-
-class Settings:
-    ENVIRONMENT = os.getenv("ENVIRONMENT", "dev")  # "dev" or "prod"
-    DATABASE_URL_DEV = os.getenv("DATABASE_URL_DEV")
-    DATABASE_URL_PROD = os.getenv("DATABASE_URL_PROD")
+class Settings(BaseSettings):
+    ENVIRONMENT: str = "prod"
+    DATABASE_URL_DEV: str = "postgresql+psycopg2://postgres:hZOETWIWyokNhTHzveyPRfjcyGXjjrlK@metro.proxy.rlwy.net:32695/railway"
+    DATABASE_URL_PROD: str = "postgresql://postgres:ANlZGhCfhonWkaNNaBiLHYYHFFCICWju@yamabiko.proxy.rlwy.net:36739/railway"
 
     @property
     def DATABASE_URL(self):
@@ -14,5 +11,7 @@ class Settings:
             return self.DATABASE_URL_PROD
         return self.DATABASE_URL_DEV
 
-settings = Settings()
+    class Config:
+        env_file = ".env"
 
+settings = Settings()
