@@ -1,18 +1,17 @@
 import requests
 
-url = "http://localhost:8000/api/users/login"  # đổi lại nếu bạn chạy online
-
+url = "https://csa-backend-v90k.onrender.com/api/users/login"
 payload = {
-    "phone": "0775081196",      # 🔁 Thay bằng số thật trong DB
-    "password": "admin123"  # 🔁 Thay bằng mật khẩu thật
+    "phone": "0775081196",
+    "password": "admin123"
 }
 
-response = requests.post(url, json=payload)
+res = requests.post(url, json=payload)
 
-if response.status_code == 200:
-    print("✅ Đăng nhập thành công:")
-    print(response.json())
+if res.status_code == 200:
+    print("✅ Success:")
+    print(res.json())
 else:
-    print("❌ Đăng nhập thất bại:")
-    print("Status code:", response.status_code)
-    print("Detail:", response.json())
+    print(f"❌ Failed with status code: {res.status_code}")
+    print("Response:", res.text)
+
