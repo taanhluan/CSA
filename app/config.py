@@ -1,7 +1,7 @@
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    ENVIRONMENT: str = "prod"
+    ENVIRONMENT: str = "dev"
     DATABASE_URL_DEV: str = "postgresql+psycopg2://postgres:hZOETWIWyokNhTHzveyPRfjcyGXjjrlK@metro.proxy.rlwy.net:32695/railway"
     DATABASE_URL_PROD: str = "postgresql://postgres:ANlZGhCfhonWkaNNaBiLHYYHFFCICWju@yamabiko.proxy.rlwy.net:36739/railway"
 
