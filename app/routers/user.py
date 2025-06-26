@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from uuid import UUID
 
-from app.database import SessionLocal
+from app.dependencies import get_db
 from app.models.user import User
 from app.schemas.user import (
     UserLogin, UserResponse, UserCreate, RoleUpdate, PasswordUpdate
@@ -12,15 +12,7 @@ from app.utils.security import hash_password, verify_password
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
-# Dependency để lấy DB session
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-# ✅ Đăng nhập bằng sđt + password
+# ✅ Đăng nhập bằng SĐT + mật khẩu
 @router.post("/login", response_model=UserResponse)
 def login_user(data: UserLogin, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.phone == data.phone).first()
@@ -28,7 +20,7 @@ def login_user(data: UserLogin, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Số điện thoại hoặc mật khẩu không đúng")
     return user
 
-# ✅ Tạo user mới
+# ✅ Tạo người dùng mới
 @router.post("/", response_model=UserResponse)
 def create_user(data: UserCreate, db: Session = Depends(get_db)):
     if db.query(User).filter(User.phone == data.phone).first():
@@ -45,17 +37,17 @@ def create_user(data: UserCreate, db: Session = Depends(get_db)):
     db.refresh(user)
     return user
 
-# ✅ Danh sách người dùng
+# ✅ Lấy danh sách người dùng
 @router.get("/", response_model=List[UserResponse])
 def list_users(db: Session = Depends(get_db)):
     return db.query(User).order_by(User.created_at.desc()).all()
 
-# ✅ Cập nhật quyền role (staff ↔ admin)
+# ✅ Cập nhật quyền người dùng (staff ↔ admin)
 @router.patch("/{user_id}/role", response_model=UserResponse)
 def update_user_role(user_id: UUID, data: RoleUpdate, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="User không tồn tại")
     user.role = data.role
     db.commit()
     db.refresh(user)
@@ -66,7 +58,7 @@ def update_user_role(user_id: UUID, data: RoleUpdate, db: Session = Depends(get_
 def update_user_password(user_id: UUID, data: PasswordUpdate, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="User không tồn tại")
     user.password_hash = hash_password(data.password)
     db.commit()
     db.refresh(user)
