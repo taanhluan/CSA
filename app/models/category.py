@@ -1,13 +1,14 @@
 from sqlalchemy import Column, String
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 from app.database import Base
 import uuid
 
 class ServiceCategory(Base):
     __tablename__ = "service_categories"
 
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String, unique=True, nullable=False)
     description = Column(String, nullable=True)
 
-    def __repr__(self):
-        return f"<ServiceCategory(id={self.id}, name='{self.name}')>"
+    services = relationship("Service", back_populates="category")

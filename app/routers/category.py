@@ -4,7 +4,7 @@ from app.database import get_db
 from app.models.category import ServiceCategory
 from app.schemas.category import CategoryCreate, CategoryUpdate, CategoryResponse
 
-router = APIRouter(prefix="/api/categories", tags=["Categories"])
+router = APIRouter(prefix="/categories", tags=["Categories"])
 
 # ✅ Tạo mới category
 @router.post("/", response_model=CategoryResponse)

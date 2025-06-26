@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
+from uuid import UUID
 
 # 🧱 Schema cơ bản dùng chung
 class CategoryBase(BaseModel):
@@ -16,7 +17,7 @@ class CategoryUpdate(CategoryBase):
 
 # ✅ Schema trả về category (GET)
 class CategoryResponse(CategoryBase):
-    id: str
+    id: UUID   # 👈 Đã sửa từ str → UUID
 
     class Config:
         orm_mode = True
