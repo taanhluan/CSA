@@ -1,30 +1,37 @@
 import { useEffect, useState } from "react";
-import { ServiceItem } from "../types";
 import styles from "./ServiceEditorTable.module.css";
+import { ServiceItem } from "../types";
 
 // Interface mở rộng cho editor
 interface ServiceEditorItem {
   id?: number;
   name: string;
   unit_price: number;
-  quantity: number; // ✅ Bổ sung số lượng
+  quantity: number;
+  category_id?: string; // ✅ thêm category
+}
+
+interface Category {
+  id: string;
+  name: string;
 }
 
 interface Props {
   initialServices: ServiceItem[];
+  categories: Category[];
   onUpdate: (updated: ServiceEditorItem[]) => void;
 }
 
-const ServiceEditorTable = ({ initialServices, onUpdate }: Props) => {
+const ServiceEditorTable = ({ initialServices, categories, onUpdate }: Props) => {
   const [services, setServices] = useState<ServiceEditorItem[]>([]);
 
-useEffect(() => {
-  const extended = initialServices.map((s) => ({
-    ...s,
-    quantity: s.quantity ?? 0, // fallback nếu chưa có
-  }));
-  setServices(extended);
-}, [initialServices]);
+  useEffect(() => {
+    const extended = initialServices.map((s) => ({
+      ...s,
+      quantity: s.quantity ?? 0,
+    }));
+    setServices(extended);
+  }, [initialServices]);
 
   const handleChange = (
     index: number,
@@ -58,13 +65,13 @@ useEffect(() => {
             <th className="border px-3 py-2">Tên dịch vụ</th>
             <th className="border px-3 py-2">Đơn giá (VNĐ)</th>
             <th className="border px-3 py-2">Số lượng</th>
+            <th className="border px-3 py-2">Phân loại</th>
             <th className="border px-3 py-2 text-center">Thao tác</th>
           </tr>
         </thead>
         <tbody>
           {services.map((item, index) => (
             <tr key={index}>
-              {/* Tên dịch vụ */}
               <td className="border px-3 py-2">
                 <input
                   type="text"
@@ -74,7 +81,6 @@ useEffect(() => {
                 />
               </td>
 
-              {/* Đơn giá */}
               <td className="border px-3 py-2">
                 <input
                   type="text"
@@ -89,7 +95,6 @@ useEffect(() => {
                 />
               </td>
 
-              {/* Số lượng */}
               <td className="border px-3 py-2">
                 <input
                   type="number"
@@ -102,7 +107,21 @@ useEffect(() => {
                 />
               </td>
 
-              {/* Thao tác */}
+              <td className="border px-3 py-2">
+                <select
+                  value={item.category_id || ""}
+                  onChange={(e) => handleChange(index, "category_id", e.target.value)}
+                  className="w-full px-2 py-1 border rounded"
+                >
+                  <option value="">-- Chọn nhóm --</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </td>
+
               <td className="border px-3 py-2 text-center">
                 <button
                   onClick={() => removeRow(index)}

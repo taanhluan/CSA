@@ -1,22 +1,26 @@
+// src/pages/Services.tsx
 import React, { useEffect, useState } from "react";
 import ServiceEditorTable from "../components/ServiceEditorTable";
 import { ServiceItem } from "../types";
 import axios from "axios";
 
-
-
-const ServiceAdminPage = () => {
+const ServicesPage = () => {
   const [services, setServices] = useState<ServiceItem[]>([]);
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // 🛜 Fetch từ backend khi trang mở
+  // 🛜 Fetch dịch vụ và category khi mở trang
   useEffect(() => {
-    const fetchServices = async () => {
+    const fetchData = async () => {
       try {
-        const res = await axios.get("https://csa-backend-v90k.onrender.com/api/services");
-        setServices(res.data);
+        const [resServices, resCategories] = await Promise.all([
+          axios.get("https://csa-backend-v90k.onrender.com/api/services"),
+          axios.get("https://csa-backend-v90k.onrender.com/api/categories"),
+        ]);
+        setServices(resServices.data);
+        setCategories(resCategories.data);
       } catch (error) {
-        console.error("❌ Lỗi khi lấy dữ liệu dịch vụ:", error);
+        console.error("❌ Lỗi khi lấy dữ liệu:", error);
         const cached = localStorage.getItem("service_data");
         if (cached) {
           setServices(JSON.parse(cached));
@@ -24,7 +28,7 @@ const ServiceAdminPage = () => {
       }
     };
 
-    fetchServices();
+    fetchData();
   }, []);
 
   // ✅ Lưu dịch vụ
@@ -61,6 +65,7 @@ const ServiceAdminPage = () => {
 
       <ServiceEditorTable
         initialServices={services}
+        categories={categories} // ✅ truyền prop bắt buộc
         onUpdate={(updated) => {
           setServices(updated);
         }}
@@ -79,4 +84,4 @@ const ServiceAdminPage = () => {
   );
 };
 
-export default ServiceAdminPage;
+export default ServicesPage;

@@ -3,4 +3,5 @@ export interface ServiceItem {
   name: string;
   unit_price: number;
   quantity?: number;
+  category_id?: string; 
 }

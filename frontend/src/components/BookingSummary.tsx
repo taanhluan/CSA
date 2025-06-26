@@ -6,6 +6,10 @@ export interface ServiceItem {
   id: string;
   name: string;
   unit_price: number;
+  category?: {
+    id: string;
+    name: string;
+  } | string; // chấp nhận cả string nếu phân loại tạm
 }
 
 interface BookingSummaryProps {
@@ -35,12 +39,25 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
     const fetchAvailableServices = async () => {
       try {
         const res = await fetch("https://csa-backend-v90k.onrender.com/api/services/");
-        const data = await res.json();
-        setAvailableServices(Array.isArray(data) ? data : data.data || []);
+        let data = await res.json();
+        let serviceList = Array.isArray(data) ? data : data.data || [];
+
+        // Nếu category chưa chuẩn hóa, gán category tạm
+       serviceList = serviceList.map((s: any) => {
+  return {
+    ...s,
+    category: typeof s.category === "object" && s.category?.name
+      ? s.category
+      : { name: "Khác" },
+  };
+});
+
+        setAvailableServices(serviceList);
       } catch (err) {
         console.error("❌ Lỗi khi gọi API dịch vụ:", err);
       }
     };
+
     fetchAvailableServices();
   }, []);
 
@@ -193,12 +210,27 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
                   onChange={(e) => setSelectedServiceId(e.target.value)}
                 >
                   <option value="">-- Chọn dịch vụ --</option>
-                  {availableServices.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
+                    {Object.entries(
+          availableServices.reduce((acc, item) => {
+            const categoryName =
+              typeof item.category === "object" && item.category?.name
+                ? item.category.name
+                : "Khác";
+            if (!acc[categoryName]) acc[categoryName] = [];
+            acc[categoryName].push(item);
+            return acc;
+          }, {} as Record<string, ServiceItem[]>)
+        ).map(([category, items]) => (
+          <optgroup key={category} label={category}>
+            {items.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </optgroup>
+        ))}
+                        </select>
+
                 <input
                   type="number"
                   className={styles.inputQty}
