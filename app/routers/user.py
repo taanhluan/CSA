@@ -10,9 +10,10 @@ from app.schemas.user import (
 )
 from app.utils.security import hash_password, verify_password
 
+# ✅ Router gốc với prefix /users
 router = APIRouter(prefix="/users", tags=["Users"])
 
-# ✅ Đăng nhập bằng SĐT + mật khẩu
+# ✅ Đăng nhập bằng SĐT + mật khẩu qua /api/users/login
 @router.post("/login", response_model=UserResponse)
 def login_user(data: UserLogin, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.phone == data.phone).first()
@@ -63,3 +64,15 @@ def update_user_password(user_id: UUID, data: PasswordUpdate, db: Session = Depe
     db.commit()
     db.refresh(user)
     return user
+
+# ⬇️⬇️⬇️ ✅✅✅ THÊM MỚI CHO LOGIN KHÔNG PREFIX /api/login ⬇️⬇️⬇️
+from fastapi import APIRouter as BaseRouter
+no_prefix_router = BaseRouter()
+
+@no_prefix_router.post("/login", response_model=UserResponse)
+def login_root(data: UserLogin, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.phone == data.phone).first()
+    if not user or not verify_password(data.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Số điện thoại hoặc mật khẩu không đúng")
+    return user
+# ⬆️⬆️⬆️ ✅ THÊM HẾT ĐOẠN NÀY Ở CUỐI FILE users.py

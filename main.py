@@ -6,6 +6,7 @@ from app.routers import booking as booking_router
 from app.routers import member as member_router
 from app.routers import services as service_router
 from app.routers import user as user_router
+from app.routers.user import no_prefix_router  # ✅ THÊM DÒNG NÀY
 from app.routers import report as report_router
 from app.routers import category as category_router
 from app.config import settings
@@ -22,7 +23,7 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # nên cụ thể hơn dùng ["*"]
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -38,9 +39,10 @@ api_router.include_router(member_router.router)
 api_router.include_router(service_router.router)
 api_router.include_router(user_router.router)
 api_router.include_router(report_router.router)
-api_router.include_router(category_router.router)  # ✅ Đã sửa: đưa vào /api
+api_router.include_router(category_router.router)
 
 app.include_router(api_router)
+app.include_router(no_prefix_router)  # ✅ THÊM DÒNG NÀY ĐỂ /api/login HOẠT ĐỘNG
 
 # ✅ Test endpoint
 @app.get("/")
