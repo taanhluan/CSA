@@ -24,7 +24,11 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # frontend origin
+    allow_origins=[
+        "http://localhost:3000",
+        "https://csa-taanhluans-projects.vercel.app",
+        "https://csa-beryl.vercel.app",  # thêm domain mới này
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
