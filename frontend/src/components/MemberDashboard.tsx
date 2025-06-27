@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import { getMembers, toggleMemberStatus } from "../api/members";
+import {
+  getMembers,
+  updateMember,
+  deactivateMember,
+} from "../api/members";
 import toast from "react-hot-toast";
 import styles from "./MemberDashboard.module.css";
 
@@ -18,35 +22,66 @@ const MemberDashboard = ({ refresh }: { refresh: boolean }) => {
   const [filterType, setFilterType] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [editedMembers, setEditedMembers] = useState<Record<string, Partial<Member>>>({});
+  const [deletedMemberIds, setDeletedMemberIds] = useState<string[]>([]);
 
   const loadMembers = async () => {
     const res = await getMembers();
     setMembers(res);
+    setEditedMembers({});
+    setDeletedMemberIds([]);
   };
 
   useEffect(() => {
     loadMembers();
   }, [refresh]);
 
-  const handleToggleStatus = async (member: Member) => {
+  const handleFieldChange = (id: string, field: keyof Member, value: any) => {
+    setMembers((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, [field]: value } : m))
+    );
+    setEditedMembers((prev) => ({
+      ...prev,
+      [id]: {
+        ...prev[id],
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleMarkDelete = (id: string) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa hội viên này (chờ xác nhận)?")) return;
+    setDeletedMemberIds((prev) => [...prev, id]);
+  };
+
+  const handleSaveAll = async () => {
+    const updateEntries = Object.entries(editedMembers);
+    const deleteEntries = [...deletedMemberIds];
+
     try {
-      const updated = await toggleMemberStatus(member.id, !member.is_active);
-      toast.success(
-        `✅ ${member.full_name} đã được ${updated.is_active ? "kích hoạt" : "vô hiệu hóa"}`,
-        { duration: 3000 }
-      );
-      await loadMembers();
+      for (const [id, payload] of updateEntries) {
+        await updateMember(id, payload);
+      }
+
+      for (const id of deleteEntries) {
+        await deactivateMember(id);
+      }
+
+      toast.success("✅ Đã lưu tất cả thay đổi & xóa");
+      loadMembers();
     } catch (err) {
-      toast.error("❌ Lỗi khi cập nhật trạng thái");
+      console.error(err);
+      toast.error("❌ Lỗi khi lưu/xóa thay đổi");
     }
   };
 
   const filtered = members
     .filter(
       (m) =>
+        !deletedMemberIds.includes(m.id) &&
         (filterType === "all" || m.type === filterType) &&
-        (m.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          m.phone_number.includes(searchTerm))
+        (m.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          m.phone_number?.includes(searchTerm))
     )
     .sort((a, b) =>
       sortOrder === "asc"
@@ -81,7 +116,19 @@ const MemberDashboard = ({ refresh }: { refresh: boolean }) => {
         >
           📅 Ngày đăng ký: {sortOrder === "asc" ? "↑" : "↓"}
         </button>
+
+        {(Object.keys(editedMembers).length > 0 || deletedMemberIds.length > 0) && (
+          <button className={styles.saveAllButton} onClick={handleSaveAll}>
+            💾 Lưu thay đổi
+          </button>
+        )}
       </div>
+
+      {deletedMemberIds.length > 0 && (
+        <div style={{ color: "red", marginBottom: "1rem" }}>
+          ⚠️ {deletedMemberIds.length} hội viên đã được đánh dấu xóa (sẽ bị xóa khi bạn lưu).
+        </div>
+      )}
 
       <table className={styles.table}>
         <thead>
@@ -96,40 +143,72 @@ const MemberDashboard = ({ refresh }: { refresh: boolean }) => {
           </tr>
         </thead>
         <tbody>
-          {filtered.map((m) => (
-            <tr key={m.id}>
-              <td>{m.full_name}</td>
-              <td>{m.phone_number}</td>
-              <td>{m.email || "—"}</td>
-              <td>
-                <span className={m.type === "vip" ? styles.vip : styles.regular}>
-                  {m.type === "vip" ? "VIP 💎" : "Thường"}
-                </span>
-              </td>
-              <td>
-                <span className={m.is_active ? styles.active : styles.inactive}>
-                  {m.is_active ? "Hoạt động" : "Vô hiệu"}
-                </span>
-              </td>
-              <td>
-                {new Date(m.created_at).toLocaleString("vi-VN", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </td>
-              <td>
-                <button
-                  className={m.is_active ? styles.deactivate : styles.activate}
-                  onClick={() => handleToggleStatus(m)}
-                >
-                  {m.is_active ? "Vô hiệu" : "Kích hoạt"}
-                </button>
-              </td>
-            </tr>
-          ))}
+          {members.map((m) => {
+            const isDeleted = deletedMemberIds.includes(m.id);
+            return (
+              <tr key={m.id} className={isDeleted ? styles.deletedRow : ""}>
+                <td>
+                  <input
+                    className={styles.input}
+                    value={m.full_name || ""}
+                    onChange={(e) => handleFieldChange(m.id, "full_name", e.target.value)}
+                    disabled={isDeleted}
+                  />
+                </td>
+                <td>
+                  <input
+                    className={styles.input}
+                    value={m.phone_number || ""}
+                    onChange={(e) => handleFieldChange(m.id, "phone_number", e.target.value)}
+                    disabled={isDeleted}
+                  />
+                </td>
+                <td>
+                  <input
+                    className={styles.input}
+                    value={m.email || ""}
+                    onChange={(e) => handleFieldChange(m.id, "email", e.target.value)}
+                    disabled={isDeleted}
+                  />
+                </td>
+                <td>
+                  <select
+                    className={styles.input}
+                    value={m.type}
+                    onChange={(e) => handleFieldChange(m.id, "type", e.target.value)}
+                    disabled={isDeleted}
+                  >
+                    <option value="regular">Thường</option>
+                    <option value="vip">VIP 💎</option>
+                  </select>
+                </td>
+                <td>
+                  <span className={m.is_active ? styles.active : styles.inactive}>
+                    {m.is_active ? "Hoạt động" : "Vô hiệu"}
+                  </span>
+                </td>
+                <td>
+                  {new Date(m.created_at).toLocaleString("vi-VN", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </td>
+                <td>
+                  {!isDeleted && (
+                    <button
+                      className={styles.deleteButton}
+                      onClick={() => handleMarkDelete(m.id)}
+                    >
+                      Xóa
+                    </button>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

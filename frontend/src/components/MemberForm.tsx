@@ -14,11 +14,11 @@ const MemberForm = ({ onCreated }: { onCreated: () => void }) => {
     e.preventDefault();
     try {
       await createMember({
-        full_name: fullName,
-        phone_number: phoneNumber,
-        email: email || undefined,
-        type,
-      });
+      full_name: fullName.trim(), // string bắt buộc
+      phone_number: phoneNumber.trim(), // string bắt buộc
+      email: email.trim() || undefined, // optional
+      type,
+    });
       setMessage("✅ Tạo hội viên thành công!");
       setError(false);
       setFullName("");
@@ -40,19 +40,17 @@ const MemberForm = ({ onCreated }: { onCreated: () => void }) => {
       <input
         className={styles.input}
         type="text"
-        placeholder="Tên hội viên"
+        placeholder="Tên hội viên (tuỳ chọn)"
         value={fullName}
         onChange={(e) => setFullName(e.target.value)}
-        required
       />
 
       <input
         className={styles.input}
         type="tel"
-        placeholder="Số điện thoại"
+        placeholder="Số điện thoại (tuỳ chọn)"
         value={phoneNumber}
         onChange={(e) => setPhoneNumber(e.target.value)}
-        required
       />
 
       <input

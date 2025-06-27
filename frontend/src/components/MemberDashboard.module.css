@@ -1,130 +1,188 @@
-/* MemberDashboard.module.css - Responsive */
-
 .wrapper {
-  margin-top: 24px;
-  padding: 0 16px;
+  padding: 1.5rem;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  overflow-x: auto;
 }
 
 .title {
-  font-size: 1.25rem;
-  font-weight: bold;
-  margin-bottom: 16px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+  color: #111827;
 }
 
 .controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 16px;
   align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 
-.controls input,
-.controls select {
-  padding: 6px 12px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  flex: 1;
-  min-width: 180px;
+.controls label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.controls select,
+.controls input {
+  padding: 0.45rem 0.7rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: #f9fafb;
+  font-size: 0.95rem;
 }
 
 .sortBtn {
-  background-color: #eee;
+  padding: 0.5rem 1rem;
+  background-color: #3b82f6;
+  color: white;
   border: none;
-  padding: 6px 10px;
-  border-radius: 4px;
+  border-radius: 6px;
+  font-weight: 500;
   cursor: pointer;
-  white-space: nowrap;
+  transition: background-color 0.2s;
+}
+
+.sortBtn:hover {
+  background-color: #2563eb;
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
-  overflow-x: auto;
+  font-size: 0.95rem;
+  background-color: #fff;
+}
+
+.table thead {
+  background-color: #f3f4f6;
 }
 
 .table th,
 .table td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  word-break: break-word;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: middle;
 }
 
-.vip {
-  background: #f3e8ff;
-  color: #7c3aed;
-  padding: 4px 8px;
-  border-radius: 9999px;
-  font-weight: 600;
-  font-size: 0.75rem;
+.table tbody tr:hover {
+  background-color: #f9fafb;
 }
 
-.regular {
-  background: #e0f2fe;
-  color: #0284c7;
-  padding: 4px 8px;
-  border-radius: 9999px;
-  font-weight: 600;
-  font-size: 0.75rem;
+/* ✅ Căn giữa các cột trạng thái, ngày, hành động */
+.table td:nth-child(6),
+.table td:nth-child(7),
+.table td:nth-child(8) {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.input {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.9rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
 }
 
 .active {
-  background: #d1fae5;
-  color: #047857;
-  padding: 4px 8px;
-  border-radius: 9999px;
-  font-weight: 600;
-  font-size: 0.75rem;
+  color: #10b981;
+  font-weight: 500;
+  text-align: center;
 }
 
 .inactive {
-  background: #fee2e2;
-  color: #dc2626;
-  padding: 4px 8px;
-  border-radius: 9999px;
-  font-weight: 600;
-  font-size: 0.75rem;
+  color: #ef4444;
+  font-weight: 500;
+  text-align: center;
 }
 
-.activate,
-.deactivate {
-  border: none;
-  padding: 4px 8px;
-  border-radius: 4px;
-  cursor: pointer;
+.deleteButton {
+  background-color: #ef4444;
   color: white;
-  font-size: 0.8rem;
+  border: none;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-block;
+  min-width: 60px;
+  text-align: center;
+  transition: background-color 0.2s;
 }
 
-.activate {
-  background: #16a34a;
+.deleteButton:hover {
+  background-color: #dc2626;
 }
 
-.deactivate {
-  background: #ef4444;
+.updateButton {
+  background-color: #10b981;
+  color: white;
+  padding: 0.3rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.85rem;
+  border: none;
+  cursor: pointer;
+  margin-right: 0.5rem;
 }
 
-/* Responsive tweaks */
-@media (max-width: 768px) {
-  .table th,
-  .table td {
-    font-size: 0.8rem;
-    padding: 6px;
-  }
+.updateButton:hover {
+  background-color: #047857;
+}
 
+/* ✅ Nút Lưu thay đổi toàn bộ */
+.saveAllButton {
+  background-color: #2563eb;
+  color: white;
+  font-weight: 600;
+  padding: 0.5rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-left: 1rem;
+  transition: background-color 0.3s ease, opacity 0.3s ease;
+}
+
+.saveAllButton:hover {
+  background-color: #1e40af;
+}
+
+.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+/* ✅ Responsive Mobile */
+@media screen and (max-width: 768px) {
   .controls {
     flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .controls input,
-  .controls select {
-    width: 100%;
+    align-items: stretch;
   }
 
   .sortBtn {
     width: 100%;
-    text-align: left;
+  }
+
+  .table {
+    font-size: 0.85rem;
+  }
+
+  .table th,
+  .table td {
+    padding: 0.5rem;
   }
 }
