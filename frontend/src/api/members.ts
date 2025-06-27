@@ -33,6 +33,7 @@ export const toggleMemberStatus = async (id: string, newStatus: boolean) => {
 };
 
 // ✅ Cập nhật thông tin hội viên (PUT)
+// 🛠 Đã fix lỗi 422 bằng cách lọc bỏ undefined/null trong payload
 export const updateMember = async (
   id: string,
   payload: {
@@ -42,7 +43,12 @@ export const updateMember = async (
     type?: "regular" | "vip";
   }
 ) => {
-  const res = await api.put(`/members/${id}`, payload);
+  // ⚠️ Lọc bỏ mọi trường có giá trị undefined hoặc null trước khi gửi lên BE
+  const cleanedPayload = Object.fromEntries(
+    Object.entries(payload).filter(([_, v]) => v !== undefined && v !== null)
+  );
+
+  const res = await api.put(`/members/${id}`, cleanedPayload);
   return res.data;
 };
 
