@@ -19,6 +19,7 @@ origins = [
     "https://jubilant-space-funicular-j6jgjjgj4wvfw67-3000.app.github.dev",  # Codespaces
     "https://csa-taanhluans-projects.vercel.app",  # Vercel
     "http://localhost:3000",  # Local dev
+    "https://csa-beryl.vercel.app",
 ]
 
 app.add_middleware(

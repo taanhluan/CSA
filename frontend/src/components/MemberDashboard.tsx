@@ -175,8 +175,11 @@ const MemberDashboard = ({ refresh }: { refresh: boolean }) => {
                   <select
                     className={styles.input}
                     value={m.type}
-                    onChange={(e) => handleFieldChange(m.id, "type", e.target.value)}
-                    disabled={isDeleted}
+                    onChange={(e) => {
+    console.log("Selected type:", e.target.value);
+    handleFieldChange(m.id, "type", e.target.value);
+  }}
+  disabled={isDeleted}
                   >
                     <option value="regular">Thường</option>
                     <option value="vip">VIP 💎</option>

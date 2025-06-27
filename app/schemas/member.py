@@ -14,11 +14,17 @@ class MemberCreate(BaseModel):
     email: Optional[EmailStr] = None
     type: MemberType
 
+class MemberUpdate(BaseModel):
+    full_name: Optional[str] = None
+    phone_number: Optional[str] = None
+    email: Optional[EmailStr] = None
+    type: Optional[MemberType] = None
+
 class MemberResponse(BaseModel):
     id: UUID
     full_name: str
     phone_number: str
-    email: Optional[str]
+    email: Optional[EmailStr] = None
     type: MemberType
     is_active: bool
     created_at: datetime

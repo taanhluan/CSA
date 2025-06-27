@@ -13,8 +13,8 @@ class Member(Base):
     __tablename__ = "members"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    full_name = Column(String, nullable=False)
-    phone_number = Column(String, unique=True, index=True)
+    full_name = Column(String, nullable=True)  # ✅ Cho phép cập nhật trống
+    phone_number = Column(String, unique=True, index=True, nullable=True)  # ✅ Optional
     email = Column(String, unique=True, nullable=True)
     type = Column(Enum(MemberType), default=MemberType.regular)
     is_active = Column(Boolean, default=True)
