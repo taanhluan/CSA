@@ -10,7 +10,7 @@ class MemberType(str, Enum):
 
 class MemberCreate(BaseModel):
     full_name: str
-    phone_number: str
+    phone_number: Optional[str] = None
     email: Optional[EmailStr] = None
     type: MemberType
 

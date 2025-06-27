@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session, joinedload
 from typing import List
+from uuid import UUID
 
 from app.database import SessionLocal
 from app.models.service import Service
@@ -21,18 +22,36 @@ def get_db():
 def get_services(db: Session = Depends(get_db)):
     return db.query(Service).options(joinedload(Service.category)).all()
 
-# ✅ API: POST /services - Ghi đè toàn bộ danh sách dịch vụ (truncate)
+# === Thay đổi toàn bộ hàm POST /services từ ghi đè (truncate) sang upsert ===
 @router.post("/", response_model=dict)
-def update_services(updated_services: List[ServiceCreate], db: Session = Depends(get_db)):
-    db.query(Service).delete()
+def upsert_services(updated_services: List[ServiceCreate], db: Session = Depends(get_db)):
     for item in updated_services:
-        service = Service(
-            name=item.name,
-            unit_price=item.unit_price,
-            quantity=item.quantity or 0,
-            category_id=item.category_id  # 🆕 Lưu category_id luôn
-        )
-        db.add(service)
+        if item.id:  # Nếu có id thì update
+            service = db.query(Service).filter(Service.id == item.id).first()
+            if service:
+                service.name = item.name
+                service.unit_price = item.unit_price
+                service.quantity = item.quantity or 0
+                service.category_id = item.category_id
+            else:
+                # Nếu không tìm thấy, tạo mới với id cố định
+                service = Service(
+                    id=item.id,
+                    name=item.name,
+                    unit_price=item.unit_price,
+                    quantity=item.quantity or 0,
+                    category_id=item.category_id
+                )
+                db.add(service)
+        else:
+            # Nếu không có id, tạo mới bình thường
+            service = Service(
+                name=item.name,
+                unit_price=item.unit_price,
+                quantity=item.quantity or 0,
+                category_id=item.category_id
+            )
+            db.add(service)
     db.commit()
     return {
         "message": "✅ Danh sách dịch vụ đã được cập nhật",

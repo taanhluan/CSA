@@ -5,10 +5,14 @@ from app.schemas.member import MemberCreate
 
 # Tạo hội viên mới
 def create_member(db: Session, data: MemberCreate):
+    phone_number = data.phone_number
+    if phone_number == "":
+        phone_number = None
+
     member = Member(
         id=uuid4(),
         full_name=data.full_name,
-        phone_number=data.phone_number,
+        phone_number=phone_number,
         email=data.email,
         type=data.type
     )

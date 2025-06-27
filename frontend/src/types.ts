@@ -1,5 +1,5 @@
 export interface ServiceItem {
-  id?: number; // ✅ optional để hỗ trợ cả dữ liệu mới chưa có id
+  id?: string;  // ✅ đổi từ number sang string (UUID dạng chuỗi)
   name: string;
   unit_price: number;
   quantity?: number;

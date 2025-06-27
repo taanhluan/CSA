@@ -40,7 +40,12 @@ def get_member(member_id: UUID, db: Session = Depends(get_db)):
 # ✅ API: Tạo hội viên mới
 @router.post("/", response_model=MemberResponse)
 def create_member(data: MemberCreate, db: Session = Depends(get_db)):
-    return member_crud.create_member(db, data)
+    data_dict = data.dict()
+    if data_dict.get("phone_number") == "":
+        data_dict["phone_number"] = None
+    updated_data = MemberCreate(**data_dict)
+    return member_crud.create_member(db, updated_data)
+
 
 # ✅ API: Lấy toàn bộ danh sách hội viên
 @router.get("/", response_model=List[MemberResponse])

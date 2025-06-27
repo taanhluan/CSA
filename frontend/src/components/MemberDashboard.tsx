@@ -71,7 +71,7 @@ const MemberDashboard = ({ refresh }: { refresh: boolean }) => {
       loadMembers();
     } catch (err) {
       console.error(err);
-      toast.error("❌ Lỗi khi lưu/xóa thay đổi");
+      toast.error("Lỗi khi lưu/xóa thay đổi");
     }
   };
 
@@ -143,7 +143,7 @@ const MemberDashboard = ({ refresh }: { refresh: boolean }) => {
           </tr>
         </thead>
         <tbody>
-          {members.map((m) => {
+          {filtered.map((m) => {
             const isDeleted = deletedMemberIds.includes(m.id);
             return (
               <tr key={m.id} className={isDeleted ? styles.deletedRow : ""}>
@@ -176,10 +176,10 @@ const MemberDashboard = ({ refresh }: { refresh: boolean }) => {
                     className={styles.input}
                     value={m.type}
                     onChange={(e) => {
-    console.log("Selected type:", e.target.value);
-    handleFieldChange(m.id, "type", e.target.value);
-  }}
-  disabled={isDeleted}
+                        console.log("Selected type:", e.target.value);
+                        handleFieldChange(m.id, "type", e.target.value);
+                      }}
+                      disabled={isDeleted}
                   >
                     <option value="regular">Thường</option>
                     <option value="vip">VIP 💎</option>

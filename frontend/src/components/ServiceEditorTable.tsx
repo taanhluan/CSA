@@ -4,7 +4,7 @@ import { ServiceItem } from "../types";
 
 // Interface mở rộng cho editor
 interface ServiceEditorItem {
-  id?: number;
+  id?: string; // ✅ Đổi thành string vì UUID dạng chuỗi khi nhận từ backend/frontend
   name: string;
   unit_price: number;
   quantity: number;
@@ -26,7 +26,9 @@ const ServiceEditorTable = ({ initialServices, categories, onUpdate }: Props) =>
   const [services, setServices] = useState<ServiceEditorItem[]>([]);
 
   useEffect(() => {
+    // ✍️ Giữ nguyên id và quantity
     const extended = initialServices.map((s) => ({
+      id: s.id, // ✅ giữ id để frontend luôn có id
       ...s,
       quantity: s.quantity ?? 0,
     }));
@@ -39,12 +41,15 @@ const ServiceEditorTable = ({ initialServices, categories, onUpdate }: Props) =>
     value: string | number
   ) => {
     const updated = [...services];
-    (updated[index] as any)[key] = key === "unit_price" || key === "quantity" ? Number(value) : value;
+    // Chuyển đổi số cho unit_price, quantity; giữ nguyên string cho các trường khác (id, name, category_id)
+    (updated[index] as any)[key] =
+      key === "unit_price" || key === "quantity" ? Number(value) : value;
     setServices(updated);
     onUpdate(updated);
   };
 
   const addRow = () => {
+    // Thêm dòng mới không có id
     const updated = [...services, { name: "", unit_price: 0, quantity: 0 }];
     setServices(updated);
     onUpdate(updated);
@@ -71,7 +76,7 @@ const ServiceEditorTable = ({ initialServices, categories, onUpdate }: Props) =>
         </thead>
         <tbody>
           {services.map((item, index) => (
-            <tr key={index}>
+            <tr key={item.id ?? index}> {/* ✅ key ưu tiên id nếu có */}
               <td className="border px-3 py-2">
                 <input
                   type="text"

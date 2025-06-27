@@ -1,4 +1,3 @@
-// src/pages/ServiceAdminPage.tsx
 import { useEffect, useState } from "react";
 import ServiceEditorTable from "../components/ServiceEditorTable";
 import { ServiceItem } from "../types";
@@ -54,11 +53,13 @@ const ServiceAdminPage = () => {
     fetchCategories(); // ✅ gọi thêm để load categories
   }, []);
 
-  // ✅ Save tất cả dịch vụ
+  // === CHỈNH SỬA PHẦN NÀY ===
+  // ✅ Save tất cả dịch vụ - gửi kèm id để backend biết update hay tạo mới
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const payload = services.map(({ name, unit_price, quantity, category_id }) => ({
+      const payload = services.map(({ id, name, unit_price, quantity, category_id }) => ({
+        id,  // 🆕 Gửi id để backend upsert đúng
         name,
         unit_price,
         quantity,
@@ -83,6 +84,7 @@ const ServiceAdminPage = () => {
       setIsSaving(false);
     }
   };
+  // === HẾT CHỈNH SỬA ===
 
   return (
     <div className={styles.container}>

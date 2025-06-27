@@ -15,6 +15,12 @@ interface Member {
   full_name: string;
 }
 
+// Hàm tính tổng tiền dựa trên danh sách dịch vụ
+function calculateGrandTotal(services: { unit_price: number; quantity: number }[]) {
+  if (!services || services.length === 0) return 0;
+  return services.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
+}
+
 const BookingForm = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [selectedMemberId, setSelectedMemberId] = useState<string | undefined>();
@@ -36,6 +42,7 @@ const BookingForm = () => {
   const loadBookings = useCallback(async () => {
     try {
       const bookings = await getBookingsByDate(selectedDate);
+      console.log("Bookings from API:", bookings);
       setTodayBookings(bookings);
     } catch (error) {
       console.error("❌ Lỗi khi load booking:", error);
@@ -51,7 +58,7 @@ const BookingForm = () => {
     try {
       setLoading(true);
       const bookingData = await createBooking({
-        member_id: selectedMemberId || undefined, // ✅ cho phép khách vãng lai
+        member_id: selectedMemberId || undefined,
         type,
         date_time: new Date(dateTime).toISOString(),
         duration,
@@ -85,9 +92,8 @@ const BookingForm = () => {
     }
   };
 
-  const filteredBookings = todayBookings.filter(b => statusFilter ? b.status === statusFilter : true);
-  const getMemberName = (id: string | undefined) =>
-    members.find(m => m.id === id)?.full_name || "Khách vãng lai";
+  const filteredBookings = todayBookings.filter(b => (statusFilter ? b.status === statusFilter : true));
+  const getMemberName = (id: string | undefined) => members.find(m => m.id === id)?.full_name || "Khách vãng lai";
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -103,7 +109,9 @@ const BookingForm = () => {
           >
             <option value="">-- Khách vãng lai --</option>
             {members.map((m) => (
-              <option key={m.id} value={m.id}>{m.full_name}</option>
+              <option key={m.id} value={m.id}>
+                {m.full_name}
+              </option>
             ))}
           </select>
         </div>
@@ -121,7 +129,7 @@ const BookingForm = () => {
         </div>
 
         <div>
-          <label className="block font-medium mb-1">Ngày & Giờ</label>
+          <label className="block font-medium mb-1">Ngày &amp; Giờ</label>
           <input
             type="datetime-local"
             className="w-full px-3 py-2 border rounded"
@@ -193,52 +201,58 @@ const BookingForm = () => {
             <p className="text-gray-500 italic">Không có booking phù hợp.</p>
           ) : (
             <ul className="max-h-[300px] overflow-auto divide-y px-2 space-y-2">
-              {filteredBookings.map((b) => (
-                <li
-                  key={b.id}
-                  className="py-2 text-sm hover:bg-gray-50 group cursor-pointer relative"
-                  onClick={() => setRecentBooking(b)}
-                >
-                  <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1">
-                    <span>
-                      🕐 {new Date(b.date_time).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", hour12: false })}
-                      {" | "}⏱ {b.duration} phút {" | "}💰 {b.deposit_amount?.toLocaleString("vi-VN")}đ
-                    </span>
-                    {b.status === "booked" && (
-                      <div className={styles.bookingActions}>
-                        <span className={styles.statusBadge}>Chưa thanh toán</span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteBooking(b.id);
-                          }}
-                          className={styles.deleteButton}
-                        >
-                          ❌ Xóa
-                        </button>
-                      </div>
-                    )}
-                    {b.status === "done" && (
-                      <span className="text-green-800 bg-green-100 text-xs px-2 py-0.5 rounded">Đã thanh toán</span>
-                    )}
-                  </div>
-                  <div className="text-gray-500 text-xs">
-                    👤 {getMemberName(b.member_id)}
-                    {b.players?.length > 0 && (
-                      <>
-                        {" | "}👥{" "}
-                        {b.players.map((p: any, i: number) => (
-                          <span key={i}>
-                            {p.player_name}
-                            {p.is_leader ? " ⭐" : ""}
-                            {i < b.players.length - 1 ? ", " : ""}
-                          </span>
-                        ))}
-                      </>
-                    )}
-                  </div>
-                </li>
-              ))}
+              {filteredBookings.map((b) => {
+                const grandTotal = calculateGrandTotal(b.services);
+
+                return (
+                  <li
+                    key={b.id}
+                    className="py-2 text-sm hover:bg-gray-50 group cursor-pointer relative"
+                    onClick={() => setRecentBooking(b)}
+                  >
+                    <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1">
+                      <span>
+                        🕐 {new Date(b.date_time).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", hour12: false })}
+                        {" | "}⏱ {b.duration} phút {" | "}💰 {b.deposit_amount?.toLocaleString("vi-VN")}đ
+                        {" | "}💵 Tổng tiền: {grandTotal.toLocaleString("vi-VN")}đ
+                        {" | "}🧾 Thanh toán: {b.payment_method || "Chưa có thông tin"}
+                      </span>
+                      {b.status === "booked" && (
+                        <div className={styles.bookingActions}>
+                          <span className={styles.statusBadge}>Chưa thanh toán</span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteBooking(b.id);
+                            }}
+                            className={styles.deleteButton}
+                          >
+                            ❌ Xóa
+                          </button>
+                        </div>
+                      )}
+                      {b.status === "done" && (
+                        <span className="text-green-800 bg-green-100 text-xs px-2 py-0.5 rounded">Đã thanh toán</span>
+                      )}
+                    </div>
+                    <div className="text-gray-500 text-xs">
+                      👤 {getMemberName(b.member_id)}
+                      {b.players?.length > 0 && (
+                        <>
+                          {" | "}👥{" "}
+                          {b.players.map((p: any, i: number) => (
+                            <span key={i}>
+                              {p.player_name}
+                              {p.is_leader ? " ⭐" : ""}
+                              {i < b.players.length - 1 ? ", " : ""}
+                            </span>
+                          ))}
+                        </>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
@@ -246,10 +260,7 @@ const BookingForm = () => {
 
       <div>
         {recentBooking && (
-          <BookingSummary
-            booking={recentBooking}
-            memberName={getMemberName(recentBooking.member_id)}
-          />
+          <BookingSummary booking={recentBooking} memberName={getMemberName(recentBooking.member_id)} />
         )}
       </div>
     </div>

@@ -15,7 +15,7 @@ const MemberForm = ({ onCreated }: { onCreated: () => void }) => {
     try {
       await createMember({
       full_name: fullName.trim(), // string bắt buộc
-      phone_number: phoneNumber.trim(), // string bắt buộc
+      phone_number: phoneNumber.trim() === "" ? "" : phoneNumber.trim(),
       email: email.trim() || undefined, // optional
       type,
     });
@@ -28,7 +28,7 @@ const MemberForm = ({ onCreated }: { onCreated: () => void }) => {
       onCreated();
     } catch (err) {
       console.error(err);
-      setMessage("❌ Lỗi khi tạo hội viên.");
+      setMessage("Lỗi khi tạo hội viên.");
       setError(true);
     }
   };

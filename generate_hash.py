@@ -1,5 +1,5 @@
-from passlib.hash import bcrypt
+import bcrypt
 
-password = "admin123"
-hashed = bcrypt.hash(password)
-print("Hashed password:", hashed)
+password = "admin456"
+hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+print(hashed.decode())

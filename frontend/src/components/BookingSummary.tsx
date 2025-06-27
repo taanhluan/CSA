@@ -29,6 +29,8 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
   const [quantity, setQuantity] = useState(1);
   const [services, setServices] = useState<SelectedService[]>([]);
   const [availableServices, setAvailableServices] = useState<ServiceItem[]>([]);
+
+  // === PHẦN THAY ĐỔI ===
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [discount, setDiscount] = useState(0);
   const [discountInput, setDiscountInput] = useState("0");
@@ -42,15 +44,14 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
         let data = await res.json();
         let serviceList = Array.isArray(data) ? data : data.data || [];
 
-        // Nếu category chưa chuẩn hóa, gán category tạm
-       serviceList = serviceList.map((s: any) => {
-  return {
-    ...s,
-    category: typeof s.category === "object" && s.category?.name
-      ? s.category
-      : { name: "Khác" },
-  };
-});
+        serviceList = serviceList.map((s: any) => {
+          return {
+            ...s,
+            category: typeof s.category === "object" && s.category?.name
+              ? s.category
+              : { name: "Khác" },
+          };
+        });
 
         setAvailableServices(serviceList);
       } catch (err) {
@@ -60,6 +61,12 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
 
     fetchAvailableServices();
   }, []);
+
+  useEffect(() => {
+    // Khi booking thay đổi, khởi tạo lại các state này
+    setPaymentMethod(booking.payment_method || "cash");   // ✅ KHỞI TẠO paymentMethod theo booking
+    setDiscount(booking.discount || 0);                   // ✅ KHỞI TẠO discount theo booking
+  }, [booking]);
 
   useEffect(() => {
     const saved = localStorage.getItem(storageKey);
@@ -76,6 +83,7 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
     setDiscountInput(discount.toLocaleString("vi-VN"));
   }, [discount]);
 
+  // Các hàm add, update, remove dịch vụ giữ nguyên
   const addService = () => {
     if (isReadOnly) return;
     const serviceItem = availableServices.find((s) => String(s.id) === selectedServiceId);
@@ -116,6 +124,7 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
   const servicesTotal = services.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
   const grandTotal = servicesTotal - booking.deposit_amount - discount;
 
+  // Khi hoàn tất booking, gửi kèm paymentMethod và discount
   const handleCompleteBooking = async () => {
     if (isReadOnly) return;
     try {
@@ -132,8 +141,8 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
               quantity: s.quantity,
             })),
             grand_total: grandTotal,
-            payment_method: paymentMethod,
-            discount: discount,
+            payment_method: paymentMethod,  // ✅ Gửi paymentMethod
+            discount: discount,             // ✅ Gửi discount
             log: `Đã thanh toán bằng ${
               paymentMethod === "cash" ? "Tiền mặt" : "Chuyển khoản"
             } - Giảm giá ${discount.toLocaleString("vi-VN")}đ`,
@@ -210,26 +219,26 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
                   onChange={(e) => setSelectedServiceId(e.target.value)}
                 >
                   <option value="">-- Chọn dịch vụ --</option>
-                    {Object.entries(
-          availableServices.reduce((acc, item) => {
-            const categoryName =
-              typeof item.category === "object" && item.category?.name
-                ? item.category.name
-                : "Khác";
-            if (!acc[categoryName]) acc[categoryName] = [];
-            acc[categoryName].push(item);
-            return acc;
-          }, {} as Record<string, ServiceItem[]>)
-        ).map(([category, items]) => (
-          <optgroup key={category} label={category}>
-            {items.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </optgroup>
-        ))}
-                        </select>
+                  {Object.entries(
+                    availableServices.reduce((acc, item) => {
+                      const categoryName =
+                        typeof item.category === "object" && item.category?.name
+                          ? item.category.name
+                          : "Khác";
+                      if (!acc[categoryName]) acc[categoryName] = [];
+                      acc[categoryName].push(item);
+                      return acc;
+                    }, {} as Record<string, ServiceItem[]>)
+                  ).map(([category, items]) => (
+                    <optgroup key={category} label={category}>
+                      {items.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
 
                 <input
                   type="number"
