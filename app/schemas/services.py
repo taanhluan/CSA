@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
+from uuid import UUID
 from app.schemas.category import CategoryResponse  # 🧩 Import category schema
 
 # ✅ Schema khi tạo/ghi service (POST)
@@ -18,7 +19,7 @@ class ServiceUpdate(BaseModel):
 
 # ✅ Schema khi trả về (GET)
 class ServiceItem(BaseModel):
-    id: int
+    id: UUID
     name: str
     unit_price: int
     quantity: int
