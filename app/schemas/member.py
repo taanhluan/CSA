@@ -23,7 +23,7 @@ class MemberUpdate(BaseModel):
 class MemberResponse(BaseModel):
     id: UUID
     full_name: str
-    phone_number: str
+    phone_number: Optional[str] = None  # ✅ Cho phép giá trị null trong DB
     email: Optional[EmailStr] = None
     type: MemberType
     is_active: bool
