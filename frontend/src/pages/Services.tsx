@@ -1,4 +1,3 @@
-// src/pages/Services.tsx
 import React, { useEffect, useState } from "react";
 import ServiceEditorTable from "../components/ServiceEditorTable";
 import { ServiceItem } from "../types";
@@ -35,15 +34,28 @@ const ServicesPage = () => {
   const handleSave = async () => {
     try {
       setLoading(true);
+
+      const cleaned = services
+        .filter((s) => s.name && s.unit_price !== undefined && s.quantity !== undefined)
+        .map(({ id, name, unit_price, quantity, category_id }) => ({
+          id,
+          name,
+          unit_price,
+          quantity,
+          category_id: category_id || undefined,
+        }));
+
+      console.log("🚀 Payload gửi lên:", cleaned);
+
       const res = await axios.post(
         "https://csa-backend-v90k.onrender.com/api/services",
-        services,
+        cleaned,
         { headers: { "Content-Type": "application/json" } }
       );
 
       if (res.status === 200 || res.status === 201) {
         alert("✅ Dữ liệu dịch vụ đã được lưu!");
-        localStorage.setItem("service_data", JSON.stringify(services));
+        localStorage.setItem("service_data", JSON.stringify(cleaned));
       } else {
         throw new Error("Lỗi từ server");
       }
@@ -65,9 +77,13 @@ const ServicesPage = () => {
 
       <ServiceEditorTable
         initialServices={services}
-        categories={categories} // ✅ truyền prop bắt buộc
+        categories={categories}
         onUpdate={(updated) => {
-          setServices(updated);
+          const cleaned = updated.map((item) => ({
+            ...item,
+            category_id: item.category_id ?? undefined,
+          }));
+          setServices(cleaned);
         }}
       />
 

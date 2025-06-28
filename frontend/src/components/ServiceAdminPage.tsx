@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import ServiceEditorTable from "../components/ServiceEditorTable";
 import { ServiceItem } from "../types";
-import styles from "./ServiceAdminPage.module.css";
 import toast from "react-hot-toast";
 
 const ServiceAdminPage = () => {
@@ -11,7 +10,6 @@ const ServiceAdminPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const storageKey = "service_catalog";
 
-  // ✅ Fetch toàn bộ services
   const fetchServices = async () => {
     setLoading(true);
     try {
@@ -36,7 +34,6 @@ const ServiceAdminPage = () => {
     }
   };
 
-  // ✅ Fetch danh mục dịch vụ
   const fetchCategories = async () => {
     try {
       const res = await fetch("https://csa-backend-v90k.onrender.com/api/categories/");
@@ -50,20 +47,18 @@ const ServiceAdminPage = () => {
 
   useEffect(() => {
     fetchServices();
-    fetchCategories(); // ✅ gọi thêm để load categories
+    fetchCategories();
   }, []);
 
-  // === CHỈNH SỬA PHẦN NÀY ===
-  // ✅ Save tất cả dịch vụ - gửi kèm id để backend biết update hay tạo mới
   const handleSave = async () => {
     setIsSaving(true);
     try {
       const payload = services.map(({ id, name, unit_price, quantity, category_id }) => ({
-        id,  // 🆕 Gửi id để backend upsert đúng
+        id,
         name,
         unit_price,
         quantity,
-        category_id,
+        category_id: category_id ? category_id : undefined, // 👈 chuyển null → undefined
       }));
 
       const res = await fetch("https://csa-backend-v90k.onrender.com/api/services/", {
@@ -76,40 +71,44 @@ const ServiceAdminPage = () => {
 
       localStorage.setItem(storageKey, JSON.stringify(services));
       toast.success("✅ Lưu thành công!");
-      await fetchServices(); // reload lại dữ liệu
+      await fetchServices();
     } catch (err) {
-      console.error("❌ Lỗi khi lưu:", err);
-      toast.error("❌ Không thể lưu dữ liệu");
+      console.error("Lỗi khi lưu:", err);
+      toast.error("Không thể lưu dữ liệu");
     } finally {
       setIsSaving(false);
     }
   };
-  // === HẾT CHỈNH SỬA ===
 
   return (
-    <div className={styles.container}>
-      <h1 className={styles.heading}>📦 Quản lý Dịch vụ</h1>
-      <p className={styles.description}>
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-2 text-indigo-700">📦 Quản lý Dịch vụ</h1>
+      <p className="text-sm text-gray-600 mb-4">
         Dữ liệu được tải từ hệ thống backend. Bạn có thể sửa đổi và bấm <strong>Lưu</strong> để đồng bộ.
       </p>
 
       {loading ? (
         <p className="text-gray-600">Đang tải dịch vụ...</p>
       ) : (
-        <ServiceEditorTable
-          initialServices={services}
-          categories={categories} // ✅ truyền category vào table
-          onUpdate={(updated) => {
-            setServices(updated);
-          }}
-        />
+       <ServiceEditorTable
+      initialServices={services}
+      categories={categories}
+      onUpdate={(updated) =>
+        setServices(
+          updated.map((item) => ({
+            ...item,
+            category_id: item.category_id ?? undefined,
+          }))
+        )
+      }
+/>
       )}
 
       <div className="text-right mt-6">
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className={styles.saveBtn}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
         >
           {isSaving ? "💾 Đang lưu..." : "💾 Lưu thay đổi"}
         </button>

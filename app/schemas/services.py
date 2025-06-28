@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 from uuid import UUID
+from fastapi import HTTPException
 from app.schemas.category import CategoryResponse  # 🧩 Import category schema
 
 # ✅ Schema khi tạo/ghi service (POST) - hỗ trợ upsert với id optional

@@ -1,29 +1,35 @@
-// src/api/services.ts
-import axios from "axios";
+import api from "./axios";
 
-// Interface gốc để sử dụng ở các nơi khác
+// Interface
 export interface ServiceItem {
-  id: number;
+  id: string; // ✅ Đã sửa sang UUID (string)
   name: string;
   unit_price: number;
+  quantity?: number;
+  category_id?: string;
 }
 
-// Interface không có `id` dùng cho POST
 export interface ServiceCreate {
   name: string;
   unit_price: number;
+  quantity?: number;
+  category_id?: string;
 }
-
-const API_URL = "https://csa-backend-v90k.onrender.com/api/services/";
 
 // GET toàn bộ danh sách dịch vụ
 export const getServices = async (): Promise<ServiceItem[]> => {
-  const res = await axios.get(API_URL);
+  const res = await api.get("/services"); // ✅ dùng api
   return res.data;
 };
 
 // POST ghi đè danh sách dịch vụ
 export const updateServices = async (services: ServiceCreate[]) => {
-  const res = await axios.post(API_URL, services);
+  const res = await api.post("/services", services); // ✅ dùng api
+  return res.data;
+};
+
+// DELETE dịch vụ
+export const deleteService = async (id: string) => {
+  const res = await api.delete(`/services/${id}`);
   return res.data;
 };

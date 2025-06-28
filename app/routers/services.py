@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session, joinedload
 from typing import List
@@ -57,3 +58,13 @@ def upsert_services(updated_services: List[ServiceCreate], db: Session = Depends
         "message": "✅ Danh sách dịch vụ đã được cập nhật",
         "total": len(updated_services)
     }
+
+# ✅ API: DELETE /services/{id} - Xoá dịch vụ theo ID
+@router.delete("/{service_id}")
+def delete_service(service_id: UUID, db: Session = Depends(get_db)):
+    service = db.query(Service).filter(Service.id == service_id).first()
+    if not service:
+        raise HTTPException(status_code=404, detail="Không tìm thấy dịch vụ cần xoá")
+    db.delete(service)
+    db.commit()
+    return {"message": f"✅ Dịch vụ '{service.name}' đã được xoá"}

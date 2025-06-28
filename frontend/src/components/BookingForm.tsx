@@ -15,7 +15,6 @@ interface Member {
   full_name: string;
 }
 
-// Hàm tính tổng tiền dựa trên danh sách dịch vụ
 function calculateGrandTotal(services: { unit_price: number; quantity: number }[]) {
   if (!services || services.length === 0) return 0;
   return services.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
@@ -24,6 +23,7 @@ function calculateGrandTotal(services: { unit_price: number; quantity: number }[
 const BookingForm = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [selectedMemberId, setSelectedMemberId] = useState<string | undefined>();
+  const [guestName, setGuestName] = useState<string>(""); // ✅ Tên khách vãng lai
   const [type, setType] = useState<"individual" | "group">("individual");
   const [dateTime, setDateTime] = useState(() => new Date().toISOString().slice(0, 16));
   const [duration] = useState(60);
@@ -41,11 +41,21 @@ const BookingForm = () => {
 
   const loadBookings = useCallback(async () => {
     try {
-      const bookings = await getBookingsByDate(selectedDate);
-      console.log("Bookings from API:", bookings);
-      setTodayBookings(bookings);
+      const bookings: any[] = await getBookingsByDate(selectedDate);
+
+      const updated = bookings.map((b) => {
+        if (!b.member_id && !b.guest_name) {
+          const guestNameLS = localStorage.getItem(`guest_name_${b.id}`);
+          if (guestNameLS) {
+            return { ...b, guest_name: guestNameLS };
+          }
+        }
+        return b;
+      });
+
+      setTodayBookings(updated);
     } catch (error) {
-      console.error("❌ Lỗi khi load booking:", error);
+      toast.error("❌ Lỗi khi load booking");
       setTodayBookings([]);
     }
   }, [selectedDate]);
@@ -65,14 +75,21 @@ const BookingForm = () => {
         deposit_amount: deposit,
         players,
       });
+
+      if (!selectedMemberId && guestName.trim()) {
+        localStorage.setItem(`guest_name_${bookingData.id}`, guestName.trim());
+        bookingData.guest_name = guestName.trim();
+      }
+
       toast.success("✅ Booking đã được tạo!");
       setRecentBooking(bookingData);
       setSelectedMemberId(undefined);
+      setGuestName(""); // reset
       setType("individual");
       setDateTime(new Date().toISOString().slice(0, 16));
       setDeposit(0);
       loadBookings();
-    } catch (err) {
+    } catch {
       toast.error("❌ Không thể lưu booking");
     } finally {
       setLoading(false);
@@ -81,19 +98,25 @@ const BookingForm = () => {
 
   const handleDeleteBooking = async (id: string) => {
     if (!window.confirm("Bạn có chắc muốn xóa booking này?")) return;
-
     try {
       await deleteBooking(id);
       toast.success("🗑️ Đã xóa booking");
+      localStorage.removeItem(`guest_name_${id}`);
       loadBookings();
       setRecentBooking(null);
-    } catch (err) {
+    } catch {
       toast.error("❌ Lỗi khi xóa booking");
     }
   };
 
-  const filteredBookings = todayBookings.filter(b => (statusFilter ? b.status === statusFilter : true));
-  const getMemberName = (id: string | undefined) => members.find(m => m.id === id)?.full_name || "Khách vãng lai";
+  const filteredBookings = todayBookings.filter((b) =>
+    statusFilter ? b.status === statusFilter : true
+  );
+
+  const getBookingDisplayName = (b: any) =>
+    b.member_id
+      ? members.find((m) => m.id === b.member_id)?.full_name || "Khách vãng lai"
+      : b.guest_name || "Khách vãng lai";
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -115,6 +138,19 @@ const BookingForm = () => {
             ))}
           </select>
         </div>
+
+        {!selectedMemberId && (
+          <div>
+            <label className="block font-medium mb-1">Tên khách vãng lai (tuỳ chọn)</label>
+            <input
+              type="text"
+              className="w-full px-3 py-2 border rounded"
+              placeholder="Nhập tên khách"
+              value={guestName}
+              onChange={(e) => setGuestName(e.target.value)}
+            />
+          </div>
+        )}
 
         <div>
           <label className="block font-medium mb-1">Loại booking</label>
@@ -146,8 +182,7 @@ const BookingForm = () => {
             inputMode="numeric"
             value={deposit.toLocaleString("vi-VN")}
             onChange={(e) => {
-              let raw = e.target.value.replace(/[^\d]/g, "");
-              raw = raw.replace(/^0+/, "");
+              let raw = e.target.value.replace(/[^\d]/g, "").replace(/^0+/, "");
               if (raw === "") raw = "0";
               const num = parseInt(raw);
               if (!isNaN(num)) setDeposit(num);
@@ -203,7 +238,6 @@ const BookingForm = () => {
             <ul className="max-h-[300px] overflow-auto divide-y px-2 space-y-2">
               {filteredBookings.map((b) => {
                 const grandTotal = calculateGrandTotal(b.services);
-
                 return (
                   <li
                     key={b.id}
@@ -212,7 +246,11 @@ const BookingForm = () => {
                   >
                     <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1">
                       <span>
-                        🕐 {new Date(b.date_time).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", hour12: false })}
+                        🕐 {new Date(b.date_time).toLocaleTimeString("vi-VN", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: false,
+                        })}
                         {" | "}⏱ {b.duration} phút {" | "}💰 {b.deposit_amount?.toLocaleString("vi-VN")}đ
                         {" | "}💵 Tổng tiền: {grandTotal.toLocaleString("vi-VN")}đ
                         {" | "}🧾 Thanh toán: {b.payment_method || "Chưa có thông tin"}
@@ -232,11 +270,13 @@ const BookingForm = () => {
                         </div>
                       )}
                       {b.status === "done" && (
-                        <span className="text-green-800 bg-green-100 text-xs px-2 py-0.5 rounded">Đã thanh toán</span>
+                        <span className="text-green-800 bg-green-100 text-xs px-2 py-0.5 rounded">
+                          Đã thanh toán
+                        </span>
                       )}
                     </div>
                     <div className="text-gray-500 text-xs">
-                      👤 {getMemberName(b.member_id)}
+                      👤 {getBookingDisplayName(b)}
                       {b.players?.length > 0 && (
                         <>
                           {" | "}👥{" "}
@@ -260,7 +300,7 @@ const BookingForm = () => {
 
       <div>
         {recentBooking && (
-          <BookingSummary booking={recentBooking} memberName={getMemberName(recentBooking.member_id)} />
+          <BookingSummary booking={recentBooking} memberName={getBookingDisplayName(recentBooking)} />
         )}
       </div>
     </div>

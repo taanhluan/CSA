@@ -186,3 +186,14 @@
     padding: 0.5rem;
   }
 }
+
+
+/* Trong MemberDashboard.module.css */
+.restoreButton {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}

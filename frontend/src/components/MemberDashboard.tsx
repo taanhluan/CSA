@@ -3,6 +3,7 @@ import {
   getMembers,
   updateMember,
   deactivateMember,
+  toggleMemberStatus,
 } from "../api/members";
 import toast from "react-hot-toast";
 import styles from "./MemberDashboard.module.css";
@@ -20,6 +21,7 @@ interface Member {
 const MemberDashboard = ({ refresh }: { refresh: boolean }) => {
   const [members, setMembers] = useState<Member[]>([]);
   const [filterType, setFilterType] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all"); // all | active | inactive
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [editedMembers, setEditedMembers] = useState<Record<string, Partial<Member>>>({});
@@ -54,6 +56,17 @@ const MemberDashboard = ({ refresh }: { refresh: boolean }) => {
     setDeletedMemberIds((prev) => [...prev, id]);
   };
 
+  const handleRestore = async (id: string) => {
+    try {
+      await toggleMemberStatus(id, true); // khôi phục
+      toast.success("✅ Khôi phục thành công");
+      loadMembers();
+    } catch (err) {
+      console.error(err);
+      toast.error("Lỗi khi khôi phục hội viên");
+    }
+  };
+
   const handleSaveAll = async () => {
     const updateEntries = Object.entries(editedMembers);
     const deleteEntries = [...deletedMemberIds];
@@ -76,13 +89,20 @@ const MemberDashboard = ({ refresh }: { refresh: boolean }) => {
   };
 
   const filtered = members
-    .filter(
-      (m) =>
+    .filter((m) => {
+      const matchStatus =
+        filterStatus === "all" ||
+        (filterStatus === "active" && m.is_active) ||
+        (filterStatus === "inactive" && !m.is_active);
+
+      return (
+        matchStatus &&
         !deletedMemberIds.includes(m.id) &&
         (filterType === "all" || m.type === filterType) &&
         (m.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           m.phone_number?.includes(searchTerm))
-    )
+      );
+    })
     .sort((a, b) =>
       sortOrder === "asc"
         ? new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
@@ -100,6 +120,15 @@ const MemberDashboard = ({ refresh }: { refresh: boolean }) => {
             <option value="all">Tất cả</option>
             <option value="regular">Thường</option>
             <option value="vip">VIP</option>
+          </select>
+        </label>
+
+        <label>
+          Trạng thái:
+          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+            <option value="all">Tất cả</option>
+            <option value="active">Hoạt động</option>
+            <option value="inactive">Vô hiệu</option>
           </select>
         </label>
 
@@ -175,11 +204,8 @@ const MemberDashboard = ({ refresh }: { refresh: boolean }) => {
                   <select
                     className={styles.input}
                     value={m.type}
-                    onChange={(e) => {
-                        console.log("Selected type:", e.target.value);
-                        handleFieldChange(m.id, "type", e.target.value);
-                      }}
-                      disabled={isDeleted}
+                    onChange={(e) => handleFieldChange(m.id, "type", e.target.value)}
+                    disabled={isDeleted}
                   >
                     <option value="regular">Thường</option>
                     <option value="vip">VIP 💎</option>
@@ -201,12 +227,23 @@ const MemberDashboard = ({ refresh }: { refresh: boolean }) => {
                 </td>
                 <td>
                   {!isDeleted && (
-                    <button
-                      className={styles.deleteButton}
-                      onClick={() => handleMarkDelete(m.id)}
-                    >
-                      Xóa
-                    </button>
+                    <>
+                      {m.is_active ? (
+                        <button
+                          className={styles.deleteButton}
+                          onClick={() => handleMarkDelete(m.id)}
+                        >
+                          Xóa
+                        </button>
+                      ) : (
+                        <button
+                          className={styles.restoreButton}
+                          onClick={() => handleRestore(m.id)}
+                        >
+                          Khôi phục
+                        </button>
+                      )}
+                    </>
                   )}
                 </td>
               </tr>
