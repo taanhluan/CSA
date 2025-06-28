@@ -1,4 +1,6 @@
 .header {
+  position: relative; /* hoặc sticky nếu muốn luôn trên đầu */
+  z-index: 50;         /* Lớn hơn z-index của sidebar */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -94,3 +96,24 @@
     width: 28px;
   }
 }
+
+.menuButton {
+  background: transparent;
+  border: none;
+  color: #374151;
+  font-size: 1.5rem;
+  margin-right: 1rem;
+  cursor: pointer;
+  display: none;
+}
+
+.menuButton:hover {
+  color: #111827;
+}
+
+@media (max-width: 768px) {
+  .menuButton {
+    display: block;
+  }
+}
+
