@@ -22,6 +22,7 @@ class BookingStatus(str, enum.Enum):
     checked_in = "checked-in"    # Đã đến sân, chưa thanh toán
     partial = "partial"          # Thanh toán một phần
     done = "done"                # Đã thanh toán đầy đủ
+    pending = "pending"            # Đang chờ xử lý (có thể là booked, checked_in hoặc partial)
     # Lưu ý: "pending" dùng để gom, không nên lưu trong DB
     # => Không cần định nghĩa trong Enum nếu không dùng để lưu
 

@@ -35,6 +35,8 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
   const [discount, setDiscount] = useState(0);
   const [discountInput, setDiscountInput] = useState("0");
 
+  const [amountPaid, setAmountPaid] = useState<number | null>(null);
+  const [amountInput, setAmountInput] = useState("");
   const storageKey = `services_${booking.id}`;
 
   useEffect(() => {
@@ -125,39 +127,42 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
   const grandTotal = servicesTotal - booking.deposit_amount - discount;
 
   // Khi hoàn tất booking, gửi kèm paymentMethod và discount
-  const handleCompleteBooking = async () => {
-    if (isReadOnly) return;
-    try {
-      const res = await fetch(
-        `https://csa-backend-v90k.onrender.com/api/bookings/${booking.id}/complete`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            services: services.map((s) => ({
-              id: s.id,
-              name: s.name,
-              unit_price: s.unit_price,
-              quantity: s.quantity,
-            })),
-            grand_total: grandTotal,
-            payment_method: paymentMethod,  // ✅ Gửi paymentMethod
-            discount: discount,             // ✅ Gửi discount
-            log: `Đã thanh toán bằng ${
-              paymentMethod === "cash" ? "Tiền mặt" : "Chuyển khoản"
-            } - Giảm giá ${discount.toLocaleString("vi-VN")}đ`,
-          }),
-        }
-      );
+ const handleCompleteBooking = async () => {
+  if (isReadOnly) return;
 
-      if (!res.ok) throw new Error("Failed to update booking");
+  const paid = amountPaid ?? grandTotal;
+  const status = paid >= grandTotal ? "done" : "partial";
 
-      toast.success("✅ Booking đã được cập nhật trạng thái!");
-      localStorage.removeItem(storageKey);
-    } catch (err) {
-      toast.error("❌ Không thể cập nhật trạng thái");
-    }
-  };
+  try {
+    const res = await fetch(
+      `https://csa-backend-v90k.onrender.com/api/bookings/${booking.id}/complete`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          services: services.map((s) => ({
+            id: s.id,
+            name: s.name,
+            unit_price: s.unit_price,
+            quantity: s.quantity,
+          })),
+          grand_total: grandTotal,
+          payment_method: paymentMethod,
+          discount,
+          log: `Khách thanh toán ${paid.toLocaleString("vi-VN")}đ bằng ${paymentMethod}`,
+          status, // ✅ Gửi status tự động: 'done' hoặc 'partial'
+        }),
+      }
+    );
+
+    if (!res.ok) throw new Error("Failed to update booking");
+
+    toast.success("✅ Booking đã được cập nhật trạng thái!");
+    localStorage.removeItem(storageKey);
+  } catch (err) {
+    toast.error("❌ Không thể cập nhật trạng thái");
+  }
+};
 
   return (
     <div className={styles.summaryCard}>

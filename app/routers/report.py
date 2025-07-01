@@ -33,7 +33,8 @@ def daily_summary(db: Session = Depends(get_db)):
     bookings = db.query(Booking).filter(Booking.date_time.between(start_utc, end_utc)).all()
     total = len(bookings)
     completed = sum(1 for b in bookings if b.status == BookingStatus.done)
-    pending = total - completed
+    partial = sum(1 for b in bookings if b.status == BookingStatus.partial)
+    pending = sum(1 for b in bookings if b.status in [BookingStatus.booked, BookingStatus.checked_in])
 
     revenue = sum(
         (s.unit_price or 0) * (s.quantity or 0)
@@ -46,6 +47,7 @@ def daily_summary(db: Session = Depends(get_db)):
     return {
         "total_bookings": total,
         "completed_bookings": completed,
+        "partial_bookings": partial,
         "pending_bookings": pending,
         "revenue": revenue,
         "members": member_count
@@ -118,7 +120,8 @@ def report_summary(
         bookings = db.query(Booking).filter(Booking.date_time.between(start_utc, end_utc)).all()
         total = len(bookings)
         completed = sum(1 for b in bookings if b.status == BookingStatus.done)
-        pending = total - completed
+        partial = sum(1 for b in bookings if b.status == BookingStatus.partial)
+        pending = sum(1 for b in bookings if b.status in [BookingStatus.booked, BookingStatus.checked_in])
 
         revenue = sum(
             (s.unit_price or 0) * (s.quantity or 0)
@@ -131,6 +134,7 @@ def report_summary(
         return {
             "total_bookings": total,
             "completed_bookings": completed,
+            "partial_bookings": partial,
             "pending_bookings": pending,
             "revenue": revenue,
             "members": member_count
@@ -196,7 +200,7 @@ def report_detail(
     start_utc = start_local.astimezone(pytz.utc)
     end_utc = end_local.astimezone(pytz.utc)
 
-# === Truy vấn dữ liệu ===
+    # === Truy vấn dữ liệu ===
     if type == "members":
         return db.query(Member).all()
 
@@ -205,13 +209,13 @@ def report_detail(
     if type == "total":
         return bookings
     elif type == "pending":
-        return [b for b in bookings if b.status == BookingStatus.pending]
+        return [b for b in bookings if b.status in [BookingStatus.booked, BookingStatus.checked_in]]
     elif type == "completed":
         return [b for b in bookings if b.status == BookingStatus.done]
     elif type == "partial":
         return [b for b in bookings if b.status == BookingStatus.partial]
     elif type == "debt":
-        return [b for b in bookings if b.status in [BookingStatus.pending, BookingStatus.partial]]
+        return [b for b in bookings if b.status == BookingStatus.partial]
     elif type == "revenue":
         return [b for b in bookings if b.status == BookingStatus.done]
     else:
