@@ -19,16 +19,12 @@ origins = [
     "https://jubilant-space-funicular-j6jgjjgj4wvfw67-3000.app.github.dev",  # Codespaces
     "https://csa-taanhluans-projects.vercel.app",  # Vercel
     "http://localhost:3000",  # Local dev
-    "https://csa-beryl.vercel.app",
+    "https://csa-beryl.vercel.app",  # Vercel phụ
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "https://csa-taanhluans-projects.vercel.app",
-        "https://csa-beryl.vercel.app",  # thêm domain mới này
-    ],
+    allow_origins=origins,  # ✅ Dùng đúng danh sách origins khai báo
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -47,7 +43,7 @@ api_router.include_router(report_router.router)
 api_router.include_router(category_router.router)
 
 app.include_router(api_router)
-app.include_router(no_prefix_router)  # ✅ THÊM DÒNG NÀY ĐỂ /api/login HOẠT ĐỘNG
+app.include_router(no_prefix_router)  # ✅ Để /api/login hoạt động
 
 # ✅ Test endpoint
 @app.get("/")

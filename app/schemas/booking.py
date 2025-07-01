@@ -69,6 +69,13 @@ class BookingResponse(BaseModel):
     players: List[BookingPlayerSchema] = []
     services: List[BookingServiceItem] = []
 
+    # ➕ Các trường mới để trả về thông tin thanh toán
+    grand_total: Optional[int] = None
+    discount: Optional[int] = None
+    payment_method: Optional[str] = None
+    log_history: Optional[str] = None
+    debt_note: Optional[str] = None  # ✅ Ghi chú nợ
+
     model_config = ConfigDict(from_attributes=True)
 
 # ------------------------------
@@ -81,3 +88,4 @@ class BookingCompleteInput(BaseModel):
     discount: int
     payment_method: Literal["cash", "bank"]
     log: str
+    debt_note: Optional[str] = None  # ✅ Cho phép nhập ghi chú công nợ

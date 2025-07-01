@@ -39,6 +39,7 @@ class Booking(Base):
     discount = Column(Integer, default=0)
     payment_method = Column(String, default="cash")
     log_history = Column(Text, nullable=True)
+    debt_note = Column(Text, nullable=True)  # ✅ Thêm trường ghi chú công nợ
 
     # 👥 Liên kết đến danh sách người chơi
     players = relationship(

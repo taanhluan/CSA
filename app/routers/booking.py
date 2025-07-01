@@ -143,6 +143,7 @@ def complete_booking(booking_id: UUID, payload: BookingCompleteInput, db: Sessio
         booking.grand_total = payload.grand_total
         booking.discount = payload.discount
         booking.payment_method = payload.payment_method
+        booking.debt_note = payload.debt_note  # ✅ Ghi chú nợ nếu có
 
         # Ghi log vào log_history
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -153,7 +154,7 @@ def complete_booking(booking_id: UUID, payload: BookingCompleteInput, db: Sessio
             booking.log_history = new_log
 
         db.commit()
-        return {"message": "Booking marked as done with services, discount, and payment method"}
+        return {"message": "Booking marked as done with services, discount, payment method and debt note"}
 
     except Exception as e:
         logger.error(f"❌ Error completing booking {booking_id}: {str(e)}")
@@ -171,7 +172,6 @@ def delete_booking(booking_id: UUID, db: Session = Depends(get_db)):
     if booking.status == BookingStatus.done:
         raise HTTPException(status_code=400, detail="Cannot delete a completed booking")
 
-    # Xoá các liên kết phụ trước (BookingPlayer, BookingService)
     db.query(BookingPlayer).filter(BookingPlayer.booking_id == booking_id).delete()
     db.query(BookingService).filter(BookingService.booking_id == booking_id).delete()
     
