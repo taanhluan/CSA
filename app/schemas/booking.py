@@ -58,6 +58,7 @@ class BookingCreate(BaseModel):
     duration: int
     deposit_amount: Optional[float] = None
     players: List[PlayerInput]
+    amount_paid: Optional[float] = None
 
 class BookingResponse(BaseModel):
     id: UUID
@@ -67,6 +68,7 @@ class BookingResponse(BaseModel):
     duration: int
     type: BookingType
     deposit_amount: Optional[float]
+    amount_paid: Optional[float] = None
     created_at: datetime
 
     players: List[BookingPlayerSchema] = []
@@ -90,5 +92,6 @@ class BookingCompleteInput(BaseModel):
     grand_total: int
     discount: int
     payment_method: Literal["cash", "bank"]
+    amount_paid: Optional[float] = None
     log: str
     debt_note: Optional[str] = None  # ✅ Cho phép nhập ghi chú công nợ

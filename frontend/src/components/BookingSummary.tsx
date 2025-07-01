@@ -37,6 +37,7 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
 
   const [amountPaid, setAmountPaid] = useState<number | null>(null);
   const [amountInput, setAmountInput] = useState("");
+  const [debtNote, setDebtNote] = useState("");
   const storageKey = `services_${booking.id}`;
 
   useEffect(() => {
@@ -66,8 +67,9 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
 
   useEffect(() => {
     // Khi booking thay đổi, khởi tạo lại các state này
-    setPaymentMethod(booking.payment_method || "cash");   // ✅ KHỞI TẠO paymentMethod theo booking
-    setDiscount(booking.discount || 0);                   // ✅ KHỞI TẠO discount theo booking
+      setPaymentMethod(booking.payment_method || "cash");
+      setDiscount(booking.discount || 0);
+      setDebtNote(booking.debt_note || "");
   }, [booking]);
 
   useEffect(() => {
@@ -139,19 +141,21 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          services: services.map((s) => ({
-            id: s.id,
-            name: s.name,
-            unit_price: s.unit_price,
-            quantity: s.quantity,
-          })),
-          grand_total: grandTotal,
-          payment_method: paymentMethod,
-          discount,
-          log: `Khách thanh toán ${paid.toLocaleString("vi-VN")}đ bằng ${paymentMethod}`,
-          status, // ✅ Gửi status tự động: 'done' hoặc 'partial'
-        }),
+       body: JSON.stringify({
+        services: services.map((s) => ({
+          id: s.id,
+          name: s.name,
+          unit_price: s.unit_price,
+          quantity: s.quantity,
+        })),
+        grand_total: grandTotal,
+        payment_method: paymentMethod,
+        discount,
+        amount_paid: paid, // ✅ Gửi số tiền khách đã trả
+        debt_note: debtNote, // ✅ Gửi ghi chú công nợ nếu có
+        log: `Khách thanh toán ${paid.toLocaleString("vi-VN")}đ bằng ${paymentMethod}`,
+        status, // ✅ Tự động xác định 'done' hoặc 'partial'
+      })
       }
     );
 
@@ -342,6 +346,31 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
               className="border rounded px-2 py-1 text-sm w-32 text-right"
             />
           </div>
+          <div className="flex items-center gap-4">
+  <label className="text-sm font-medium">💸 Khách đã trả:</label>
+  <input
+    type="text"
+    value={amountInput}
+    onChange={(e) => {
+      const raw = e.target.value.replace(/\D/g, "");
+      const parsed = Number(raw || "0");
+      setAmountPaid(parsed);
+      setAmountInput(parsed.toLocaleString("vi-VN"));
+    }}
+    className="border rounded px-2 py-1 text-sm w-32 text-right"
+  />
+</div>
+
+<div className="flex flex-col gap-2">
+  <label className="text-sm font-medium">📌 Ghi chú công nợ (nếu có):</label>
+  <textarea
+    value={debtNote}
+    onChange={(e) => setDebtNote(e.target.value)}
+    className="border rounded px-2 py-1 text-sm w-full"
+    rows={2}
+    placeholder="Khách hứa hẹn trả sau, hoặc lý do nợ..."
+  />
+</div>
         </div>
       )}
 

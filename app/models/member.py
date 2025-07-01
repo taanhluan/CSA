@@ -1,5 +1,6 @@
 from sqlalchemy import Column, String, DateTime, Enum, Boolean
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 from app.database import Base
 from datetime import datetime
 import uuid
@@ -26,3 +27,6 @@ class Member(Base):
     type = Column(Enum(MemberType), default=MemberType.regular)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=get_vietnam_time)
+
+    # ✅ Quan hệ ngược với bảng bookings
+    bookings = relationship("Booking", back_populates="member")

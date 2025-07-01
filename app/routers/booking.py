@@ -138,14 +138,23 @@ def complete_booking(booking_id: UUID, payload: BookingCompleteInput, db: Sessio
                 quantity=s.quantity
             ))
 
-        # Cập nhật thông tin booking
-        booking.status = BookingStatus.done
+        # === ✅ Cập nhật thông tin booking ===
+        if payload.amount_paid is not None:
+            booking.amount_paid = payload.amount_paid
+            if payload.amount_paid >= payload.grand_total:
+                booking.status = BookingStatus.done
+            else:
+                booking.status = BookingStatus.partial
+        else:
+            booking.amount_paid = payload.grand_total
+            booking.status = BookingStatus.done
+
         booking.grand_total = payload.grand_total
         booking.discount = payload.discount
         booking.payment_method = payload.payment_method
         booking.debt_note = payload.debt_note  # ✅ Ghi chú nợ nếu có
 
-        # Ghi log vào log_history
+        # === ✅ Ghi log lịch sử ===
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         new_log = f"[{timestamp}] {payload.log}"
         if booking.log_history:
@@ -154,12 +163,11 @@ def complete_booking(booking_id: UUID, payload: BookingCompleteInput, db: Sessio
             booking.log_history = new_log
 
         db.commit()
-        return {"message": "Booking marked as done with services, discount, payment method and debt note"}
-
+        return {"message": "Booking updated with payment, services, and status"}
+    
     except Exception as e:
         logger.error(f"❌ Error completing booking {booking_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
-
 # ------------------------------
 # ✅ Xoá booking (chỉ cho phép xoá nếu chưa thanh toán)
 # ------------------------------
@@ -178,3 +186,17 @@ def delete_booking(booking_id: UUID, db: Session = Depends(get_db)):
     db.delete(booking)
     db.commit()
     return {"message": "Booking deleted successfully"}
+
+# ------------------------------
+# ✅ Lấy danh sách booking còn nợ (status = partial)
+# ------------------------------
+@router.get("/partial", response_model=List[BookingResponse])
+def get_partial_bookings(db: Session = Depends(get_db)):
+    bookings = (
+        db.query(Booking)
+        .options(joinedload(Booking.players), joinedload(Booking.services))
+        .filter(Booking.status == BookingStatus.partial)
+        .order_by(Booking.date_time.desc())
+        .all()
+    )
+    return bookings

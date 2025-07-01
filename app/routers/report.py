@@ -200,23 +200,32 @@ def report_detail(
     start_utc = start_local.astimezone(pytz.utc)
     end_utc = end_local.astimezone(pytz.utc)
 
-    # === Truy vấn dữ liệu ===
     if type == "members":
         return db.query(Member).all()
 
     bookings = db.query(Booking).filter(Booking.date_time.between(start_utc, end_utc)).all()
 
+    def serialize_booking(b: Booking):
+        return {
+            "id": str(b.id),
+            "member_name": b.member.full_name if b.member else "Khách vãng lai",
+            "date_time": b.date_time,
+            "status": b.status.value,
+            "grand_total": b.grand_total,
+            "debt_note": b.debt_note,
+        }
+
     if type == "total":
-        return bookings
+        return [serialize_booking(b) for b in bookings]
     elif type == "pending":
-        return [b for b in bookings if b.status in [BookingStatus.booked, BookingStatus.checked_in]]
+        return [serialize_booking(b) for b in bookings if b.status in [BookingStatus.booked, BookingStatus.checked_in]]
     elif type == "completed":
-        return [b for b in bookings if b.status == BookingStatus.done]
+        return [serialize_booking(b) for b in bookings if b.status == BookingStatus.done]
     elif type == "partial":
-        return [b for b in bookings if b.status == BookingStatus.partial]
+        return [serialize_booking(b) for b in bookings if b.status == BookingStatus.partial]
     elif type == "debt":
-        return [b for b in bookings if b.status == BookingStatus.partial]
+        return [serialize_booking(b) for b in bookings if b.status == BookingStatus.partial]
     elif type == "revenue":
-        return [b for b in bookings if b.status == BookingStatus.done]
+        return [serialize_booking(b) for b in bookings if b.status == BookingStatus.done]
     else:
         raise HTTPException(status_code=400, detail="Invalid type")

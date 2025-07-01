@@ -171,7 +171,14 @@ const Dashboard = () => {
                       <th>Ngày</th>
                       <th>Trạng thái</th>
                       <th>Tổng tiền</th>
-                      {(detailType === "partial" || detailType === "debt") && <th>Ghi chú nợ</th>}
+                      {(detailType === "partial" || detailType === "debt") && (
+                        <>
+                          <th>Đã trả</th>
+                          <th>Còn nợ</th>
+                          <th>Ghi chú</th>
+                          <th>Ghi log gần nhất</th>
+                        </>
+)}
                     </tr>
                   </thead>
                   <tbody>
@@ -183,8 +190,17 @@ const Dashboard = () => {
                         <td>{item.status}</td>
                         <td>{item.grand_total?.toLocaleString("vi-VN")}₫</td>
                         {(detailType === "partial" || detailType === "debt") && (
-                          <td>{item.debt_note ? item.debt_note : <span className={detailStyles.debtNote}>Không có</span>}</td>
-                        )}
+                      <>
+                        <td>{item.amount_paid?.toLocaleString("vi-VN") || 0}₫</td>
+                        <td>{(item.grand_total - (item.amount_paid || 0)).toLocaleString("vi-VN")}₫</td>
+                        <td>{item.debt_note ? item.debt_note : <span className={detailStyles.debtNote}>Không có</span>}</td>
+                        <td>
+                          {item.log_history
+                            ? item.log_history.split("\n").pop()
+                            : <span className={detailStyles.debtNote}>Không có</span>}
+                        </td>
+                      </>
+                    )}
                       </tr>
                     ))}
                   </tbody>

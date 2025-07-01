@@ -35,6 +35,7 @@ class Booking(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     member_id = Column(UUID(as_uuid=True), ForeignKey("members.id"), nullable=True)
+    member = relationship("Member", back_populates="bookings")
 
     type = Column(Enum(BookingType), nullable=False)
     status = Column(Enum(BookingStatus), default=BookingStatus.booked)
@@ -46,6 +47,7 @@ class Booking(Base):
     grand_total = Column(Integer, nullable=True)
     discount = Column(Integer, default=0)
     payment_method = Column(String, default="cash")
+    amount_paid = Column(Numeric, nullable=True)  # ✅ Lưu số tiền khách đã thanh toán
     log_history = Column(Text, nullable=True)
     debt_note = Column(Text, nullable=True)
 

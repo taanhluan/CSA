@@ -75,3 +75,11 @@
     padding: 0.5rem;
   }
 }
+.debtNote {
+  color: #999;
+  font-style: italic;
+}
+
+.hoverRow:hover {
+  background-color: #f8f9fa;
+}
