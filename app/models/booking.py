@@ -15,9 +15,11 @@ class BookingType(str, enum.Enum):
     group = "group"
 
 class BookingStatus(str, enum.Enum):
-    booked = "booked"
-    checked_in = "checked-in"
-    done = "done"
+    booked = "booked"            # Đã đặt, chưa đến sân
+    checked_in = "checked-in"    # Đã đến sân, chưa thanh toán
+    partial = "partial"          # Thanh toán một phần
+    done = "done"                # Đã thanh toán đầy đủ
+    pending = "pending"          # [Tùy chọn] Trạng thái gom: booked + checked_in + partial
 
 # ------------------------------
 # MAIN BOOKING TABLE

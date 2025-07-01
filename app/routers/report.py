@@ -196,7 +196,7 @@ def report_detail(
     start_utc = start_local.astimezone(pytz.utc)
     end_utc = end_local.astimezone(pytz.utc)
 
-    # === Truy vấn dữ liệu ===
+# === Truy vấn dữ liệu ===
     if type == "members":
         return db.query(Member).all()
 

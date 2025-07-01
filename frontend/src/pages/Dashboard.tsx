@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import StatCard from "../components/StatCard";
 import styles from "./Dashboard.module.css";
+import detailStyles from "./DetailTable.module.css";
 
 type ReportType = "daily" | "weekly" | "monthly" | "quarterly" | "yearly";
 
@@ -136,17 +137,17 @@ const Dashboard = () => {
       {error && <p className={styles.error}>❌ {error}</p>}
 
       <div className={styles.grid}>
-        <StatCard title="📅 Tổng booking" value={stats.totalBookingsToday} color="bg-blue-500" icon="📅"
+        <StatCard title="📅 Tổng booking" value={stats.totalBookingsToday} color="bg-gradient-to-r from-blue-400 to-blue-600 text-white" icon="📅"
           onClick={() => fetchDetails("total", "Tổng Booking")} />
-        <StatCard title="⏳ Chưa hoàn tất" value={stats.pendingBookings} color="bg-red-500" icon="⏳"
+        <StatCard title="⏳ Chưa hoàn tất" value={stats.pendingBookings} color="bg-gradient-to-r from-red-400 to-red-600 text-white" icon="⏳"
           onClick={() => fetchDetails("pending", "Booking chưa hoàn tất")} />
-        <StatCard title="✅ Đã thanh toán" value={stats.completedBookingsToday} color="bg-green-500" icon="✅"
+        <StatCard title="✅ Đã thanh toán" value={stats.completedBookingsToday} color="bg-gradient-to-r from-green-400 to-green-600 text-white" icon="✅"
           onClick={() => fetchDetails("completed", "Booking đã thanh toán")} />
-        <StatCard title="👥 Hội viên hiện tại" value={stats.membersCount} color="bg-purple-500" icon="👥"
+        <StatCard title="👥 Hội viên hiện tại" value={stats.membersCount} color="bg-gradient-to-r from-purple-400 to-purple-600 text-white" icon="👥"
           onClick={() => fetchDetails("members", "Danh sách hội viên")} />
-        <StatCard title="🧾 Booking còn thiếu" value={stats.partialBookings} color="bg-pink-500" icon="🧾"
+        <StatCard title="🧾 Booking còn thiếu" value={stats.partialBookings} color="bg-gradient-to-r from-pink-400 to-pink-600 text-white" icon="🧾"
           onClick={() => fetchDetails("partial", "Booking thanh toán thiếu")} />
-        <StatCard title="💸 Tổng tiền nợ" value={`${stats.totalDebt.toLocaleString("vi-VN")}₫`} color="bg-red-700 text-white" icon="💸"
+        <StatCard title="💸 Tổng tiền nợ" value={`${stats.totalDebt.toLocaleString("vi-VN")}₫`} color="bg-gradient-to-r from-red-700 to-yellow-500 text-white" icon="💸"
           onClick={() => fetchDetails("debt", "Danh sách công nợ")} />
         <StatCard title="💰 Doanh thu" value={`${stats.revenueToday.toLocaleString("vi-VN")}₫`} color="bg-gradient-to-r from-yellow-400 to-orange-500 text-black" icon="💰"
           onClick={() => fetchDetails("revenue", "Chi tiết doanh thu")} />
@@ -155,66 +156,39 @@ const Dashboard = () => {
       {/* Modal */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-          <div className="bg-white w-[90%] max-w-4xl p-6 rounded-lg shadow-lg relative">
+          <div className="bg-white w-[90%] max-w-5xl p-6 rounded-lg shadow-2xl relative">
             <button onClick={() => setModalOpen(false)} className="absolute top-3 right-4 text-gray-600 text-lg">✖</button>
             <h3 className="text-xl font-semibold mb-4">{detailTitle}</h3>
             {detailData.length === 0 ? (
               <p className="text-gray-500">Không có dữ liệu.</p>
             ) : (
-              <div className="overflow-auto max-h-[60vh]">
-                {detailType === "members" ? (
-                  <table className="w-full text-sm border">
-                    <thead className="bg-gray-100 sticky top-0">
-                      <tr>
-                        <th className="p-2 text-left border">ID</th>
-                        <th className="p-2 text-left border">Họ tên</th>
-                        <th className="p-2 text-left border">SĐT</th>
-                        <th className="p-2 text-left border">Loại</th>
-                        <th className="p-2 text-left border">Email</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {detailData.map((item: any) => (
-                        <tr key={item.id}>
-                          <td className="p-2 border">{item.id}</td>
-                          <td className="p-2 border">{item.full_name}</td>
-                          <td className="p-2 border">{item.phone_number}</td>
-                          <td className="p-2 border">{item.type}</td>
-                          <td className="p-2 border">{item.email || "-"}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                ) : (
-                  <table className="w-full text-sm border">
-                    <thead className="bg-gray-100 sticky top-0">
-                      <tr>
-                        <th className="p-2 text-left border">ID</th>
-                        <th className="p-2 text-left border">Khách</th>
-                        <th className="p-2 text-left border">Ngày</th>
-                        <th className="p-2 text-left border">Trạng thái</th>
-                        <th className="p-2 text-left border">Tổng tiền</th>
+              <div className={detailStyles.tableContainer}>
+                <table className={detailStyles.table}>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Khách</th>
+                      <th>Ngày</th>
+                      <th>Trạng thái</th>
+                      <th>Tổng tiền</th>
+                      {(detailType === "partial" || detailType === "debt") && <th>Ghi chú nợ</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detailData.map((item: any) => (
+                      <tr key={item.id} className={detailStyles.hoverRow}>
+                        <td>{item.id}</td>
+                        <td>{item.member_name || "Khách vãng lai"}</td>
+                        <td>{new Date(item.date_time).toLocaleString("vi-VN")}</td>
+                        <td>{item.status}</td>
+                        <td>{item.grand_total?.toLocaleString("vi-VN")}₫</td>
                         {(detailType === "partial" || detailType === "debt") && (
-                          <th className="p-2 text-left border">Ghi chú nợ</th>
+                          <td>{item.debt_note ? item.debt_note : <span className={detailStyles.debtNote}>Không có</span>}</td>
                         )}
                       </tr>
-                    </thead>
-                    <tbody>
-                      {detailData.map((item: any) => (
-                        <tr key={item.id}>
-                          <td className="p-2 border">{item.id}</td>
-                          <td className="p-2 border">{item.member_name || "Khách vãng lai"}</td>
-                          <td className="p-2 border">{new Date(item.date_time).toLocaleString("vi-VN")}</td>
-                          <td className="p-2 border">{item.status}</td>
-                          <td className="p-2 border">{item.total_amount?.toLocaleString("vi-VN")}₫</td>
-                          {(detailType === "partial" || detailType === "debt") && (
-                            <td className="p-2 border">{item.debt_note || <i className="text-gray-400">Không có</i>}</td>
-                          )}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
