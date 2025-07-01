@@ -15,7 +15,10 @@ class BookingType(str, Enum):
 class BookingStatus(str, Enum):
     booked = "booked"
     checked_in = "checked-in"
+    partial = "partial"       # ✅ Thêm dòng này
     done = "done"
+    pending = "pending"       # ✅ Thêm dòng này nếu bạn xử lý gom booked/checked_in/partial
+
 
 # ------------------------------
 # PLAYER SCHEMAS

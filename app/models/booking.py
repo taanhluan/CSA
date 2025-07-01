@@ -1,4 +1,7 @@
-from sqlalchemy import Column, String, Integer, Enum, ForeignKey, DateTime, Numeric, Boolean, Text
+from sqlalchemy import (
+    Column, String, Integer, Enum, ForeignKey, DateTime,
+    Numeric, Boolean, Text
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
@@ -19,7 +22,8 @@ class BookingStatus(str, enum.Enum):
     checked_in = "checked-in"    # Đã đến sân, chưa thanh toán
     partial = "partial"          # Thanh toán một phần
     done = "done"                # Đã thanh toán đầy đủ
-    pending = "pending"          # [Tùy chọn] Trạng thái gom: booked + checked_in + partial
+    # Lưu ý: "pending" dùng để gom, không nên lưu trong DB
+    # => Không cần định nghĩa trong Enum nếu không dùng để lưu
 
 # ------------------------------
 # MAIN BOOKING TABLE
@@ -30,27 +34,30 @@ class Booking(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     member_id = Column(UUID(as_uuid=True), ForeignKey("members.id"), nullable=True)
+
     type = Column(Enum(BookingType), nullable=False)
+    status = Column(Enum(BookingStatus), default=BookingStatus.booked)
+
     date_time = Column(DateTime, nullable=False)
     duration = Column(Integer, nullable=False)
-    status = Column(Enum(BookingStatus), default=BookingStatus.booked)
     deposit_amount = Column(Numeric, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
 
     grand_total = Column(Integer, nullable=True)
     discount = Column(Integer, default=0)
     payment_method = Column(String, default="cash")
     log_history = Column(Text, nullable=True)
-    debt_note = Column(Text, nullable=True)  # ✅ Thêm trường ghi chú công nợ
+    debt_note = Column(Text, nullable=True)
 
-    # 👥 Liên kết đến danh sách người chơi
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # 👥 Danh sách người chơi
     players = relationship(
         "BookingPlayer",
         back_populates="booking",
         cascade="all, delete-orphan"
     )
 
-    # 🧾 Liên kết đến các dịch vụ đã dùng
+    # 🧾 Dịch vụ đã dùng
     services = relationship(
         "BookingService",
         back_populates="booking",
@@ -58,7 +65,7 @@ class Booking(Base):
     )
 
 # ------------------------------
-# SERVICE USED PER BOOKING
+# BOOKING SERVICES
 # ------------------------------
 
 class BookingService(Base):
@@ -66,7 +73,8 @@ class BookingService(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     booking_id = Column(UUID(as_uuid=True), ForeignKey("bookings.id"))
-    service_id = Column(UUID(as_uuid=True))  # ID gốc từ bảng dịch vụ
+
+    service_id = Column(UUID(as_uuid=True))  # ID từ bảng service gốc
     name = Column(String)
     unit_price = Column(Numeric)
     quantity = Column(Integer)
@@ -74,7 +82,7 @@ class BookingService(Base):
     booking = relationship("Booking", back_populates="services")
 
 # ------------------------------
-# PLAYER PER BOOKING
+# BOOKING PLAYERS
 # ------------------------------
 
 class BookingPlayer(Base):
@@ -82,6 +90,7 @@ class BookingPlayer(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     booking_id = Column(UUID(as_uuid=True), ForeignKey("bookings.id"))
+
     player_name = Column(String)
     is_leader = Column(Boolean, default=False)
 
