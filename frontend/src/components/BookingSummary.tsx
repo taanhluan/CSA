@@ -9,19 +9,20 @@ export interface ServiceItem {
   category?: {
     id: string;
     name: string;
-  } | string; // chấp nhận cả string nếu phân loại tạm
+  } | string;
 }
 
 interface BookingSummaryProps {
   booking: any;
   memberName: string;
+  onCompleted?: () => void;
 }
 
 interface SelectedService extends ServiceItem {
   quantity: number;
 }
 
-const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
+const BookingSummary = ({ booking, memberName, onCompleted }: BookingSummaryProps) => {
   const isReadOnly = booking.status === "done";
 
   const [showServices, setShowServices] = useState(false);
@@ -30,7 +31,6 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
   const [services, setServices] = useState<SelectedService[]>([]);
   const [availableServices, setAvailableServices] = useState<ServiceItem[]>([]);
 
-  // === PHẦN THAY ĐỔI ===
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [discount, setDiscount] = useState(0);
   const [discountInput, setDiscountInput] = useState("0");
@@ -66,10 +66,14 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
   }, []);
 
   useEffect(() => {
-    // Khi booking thay đổi, khởi tạo lại các state này
-      setPaymentMethod(booking.payment_method || "cash");
-      setDiscount(booking.discount || 0);
-      setDebtNote(booking.debt_note || "");
+    setPaymentMethod(booking.payment_method || "cash");
+    setDiscount(booking.discount || 0);
+    setDebtNote(booking.debt_note || "");
+
+    setAmountPaid(booking.amount_paid ?? null);
+    setAmountInput(
+      booking.amount_paid ? booking.amount_paid.toLocaleString("vi-VN") : ""
+    );
   }, [booking]);
 
   useEffect(() => {
@@ -87,7 +91,6 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
     setDiscountInput(discount.toLocaleString("vi-VN"));
   }, [discount]);
 
-  // Các hàm add, update, remove dịch vụ giữ nguyên
   const addService = () => {
     if (isReadOnly) return;
     const serviceItem = availableServices.find((s) => String(s.id) === selectedServiceId);
@@ -128,45 +131,48 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
   const servicesTotal = services.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
   const grandTotal = servicesTotal - booking.deposit_amount - discount;
 
-  // Khi hoàn tất booking, gửi kèm paymentMethod và discount
- const handleCompleteBooking = async () => {
-  if (isReadOnly) return;
+  const handleCompleteBooking = async () => {
+    if (isReadOnly) return;
 
-  const paid = amountPaid ?? grandTotal;
-  const status = paid >= grandTotal ? "done" : "partial";
+    const paid = amountPaid ?? grandTotal;
+    const status = paid >= grandTotal ? "done" : "partial";
 
-  try {
-    const res = await fetch(
-      `https://csa-backend-v90k.onrender.com/api/bookings/${booking.id}/complete`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-       body: JSON.stringify({
-        services: services.map((s) => ({
-          id: s.id,
-          name: s.name,
-          unit_price: s.unit_price,
-          quantity: s.quantity,
-        })),
-        grand_total: grandTotal,
-        payment_method: paymentMethod,
-        discount,
-        amount_paid: paid, // ✅ Gửi số tiền khách đã trả
-        debt_note: debtNote, // ✅ Gửi ghi chú công nợ nếu có
-        log: `Khách thanh toán ${paid.toLocaleString("vi-VN")}đ bằng ${paymentMethod}`,
-        status, // ✅ Tự động xác định 'done' hoặc 'partial'
-      })
+    try {
+      const res = await fetch(
+        `https://csa-backend-v90k.onrender.com/api/bookings/${booking.id}/complete`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            services: services.map((s) => ({
+              id: s.id,
+              name: s.name,
+              unit_price: s.unit_price,
+              quantity: s.quantity,
+            })),
+            grand_total: grandTotal,
+            payment_method: paymentMethod,
+            discount,
+            amount_paid: paid,
+            debt_note: debtNote,
+            log: `Khách thanh toán ${paid.toLocaleString("vi-VN")}đ bằng ${paymentMethod}`,
+            status,
+          }),
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to update booking");
+
+      toast.success("✅ Booking đã được cập nhật trạng thái!");
+      localStorage.removeItem(storageKey);
+
+      if (typeof onCompleted === "function") {
+        onCompleted();
       }
-    );
-
-    if (!res.ok) throw new Error("Failed to update booking");
-
-    toast.success("✅ Booking đã được cập nhật trạng thái!");
-    localStorage.removeItem(storageKey);
-  } catch (err) {
-    toast.error("❌ Không thể cập nhật trạng thái");
-  }
-};
+    } catch (err) {
+      toast.error("❌ Không thể cập nhật trạng thái");
+    }
+  };
 
   return (
     <div className={styles.summaryCard}>
@@ -346,31 +352,32 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
               className="border rounded px-2 py-1 text-sm w-32 text-right"
             />
           </div>
-          <div className="flex items-center gap-4">
-  <label className="text-sm font-medium">💸 Khách đã trả:</label>
-  <input
-    type="text"
-    value={amountInput}
-    onChange={(e) => {
-      const raw = e.target.value.replace(/\D/g, "");
-      const parsed = Number(raw || "0");
-      setAmountPaid(parsed);
-      setAmountInput(parsed.toLocaleString("vi-VN"));
-    }}
-    className="border rounded px-2 py-1 text-sm w-32 text-right"
-  />
-</div>
 
-<div className="flex flex-col gap-2">
-  <label className="text-sm font-medium">📌 Ghi chú công nợ (nếu có):</label>
-  <textarea
-    value={debtNote}
-    onChange={(e) => setDebtNote(e.target.value)}
-    className="border rounded px-2 py-1 text-sm w-full"
-    rows={2}
-    placeholder="Khách hứa hẹn trả sau, hoặc lý do nợ..."
-  />
-</div>
+          <div className="flex items-center gap-4">
+            <label className="text-sm font-medium">💸 Khách đã trả:</label>
+            <input
+              type="text"
+              value={amountInput}
+              onChange={(e) => {
+                const raw = e.target.value.replace(/\D/g, "");
+                const parsed = Number(raw || "0");
+                setAmountPaid(parsed);
+                setAmountInput(parsed.toLocaleString("vi-VN"));
+              }}
+              className="border rounded px-2 py-1 text-sm w-32 text-right"
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium">📌 Ghi chú công nợ (nếu có):</label>
+            <textarea
+              value={debtNote}
+              onChange={(e) => setDebtNote(e.target.value)}
+              className="border rounded px-2 py-1 text-sm w-full"
+              rows={2}
+              placeholder="Khách hứa hẹn trả sau, hoặc lý do nợ..."
+            />
+          </div>
         </div>
       )}
 
@@ -385,8 +392,13 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
 
       {!isReadOnly && (
         <button
+          disabled={services.length === 0}
           onClick={handleCompleteBooking}
-          className="mt-6 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm font-semibold"
+          className={`mt-6 px-4 py-2 rounded text-sm font-semibold ${
+            services.length === 0
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-purple-600 hover:bg-purple-700 text-white"
+          }`}
         >
           ✅ Hoàn tất thanh toán
         </button>

@@ -298,11 +298,22 @@ const BookingForm = () => {
         </div>
       </div>
 
-      <div>
-        {recentBooking && (
-          <BookingSummary booking={recentBooking} memberName={getBookingDisplayName(recentBooking)} />
-        )}
-      </div>
+    <div>
+  {recentBooking && (
+    <BookingSummary
+      booking={recentBooking}
+      memberName={getBookingDisplayName(recentBooking)}
+      onCompleted={() => {
+        setRecentBooking((prev: any) => ({
+          ...prev,
+          status: "done",
+        }));
+        loadBookings();
+        setTimeout(() => setRecentBooking(null), 300);
+      }}
+    />
+  )}
+</div>
     </div>
   );
 };

@@ -58,10 +58,10 @@ def env_check():
         "db_url": settings.DATABASE_URL,
     }
 
-# ✅ Ping để dùng với cron job
+# Trong main.py hoặc router riêng
 @app.get("/ping")
 def ping():
-    return {"message": "pong"}
+    return {"status": "ok"}
 
 # ✅ Chạy app nếu gọi trực tiếp
 if __name__ == "__main__":

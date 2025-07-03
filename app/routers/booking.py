@@ -124,6 +124,10 @@ def complete_booking(booking_id: UUID, payload: BookingCompleteInput, db: Sessio
         if not booking:
             raise HTTPException(status_code=404, detail="Booking not found")
 
+        # ✅ Chặn sửa nếu booking đã thanh toán
+        if booking.status == BookingStatus.done:
+            raise HTTPException(status_code=400, detail="Booking has already been completed")
+
         # Xóa dịch vụ cũ nếu có
         db.query(BookingService).filter(BookingService.booking_id == booking_id).delete()
 
@@ -168,6 +172,7 @@ def complete_booking(booking_id: UUID, payload: BookingCompleteInput, db: Sessio
     except Exception as e:
         logger.error(f"❌ Error completing booking {booking_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
+
 # ------------------------------
 # ✅ Xoá booking (chỉ cho phép xoá nếu chưa thanh toán)
 # ------------------------------
