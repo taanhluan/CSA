@@ -41,6 +41,7 @@ class BookingPlayerSchema(BaseModel):
 
 class BookingServiceItem(BaseModel):
     id: UUID
+    service_id: UUID  # ✅ thêm dòng này để frontend có thể lấy đúng
     name: str
     unit_price: int
     quantity: int

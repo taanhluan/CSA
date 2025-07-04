@@ -90,26 +90,28 @@ const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
 
 
 useEffect(() => {
-  if (isReadOnly) {
-    const sanitized = (booking.services || []).map((s: any) => ({
-      id: s.service_id || s.id, // 👈 fix ở đây
-      name: s.name,
-      unit_price: Number(s.unit_price || 0),
+  // Ưu tiên lấy từ booking.services nếu có (kể cả khi chưa "done")
+  if (booking.services && booking.services.length > 0) {
+    const sanitized = booking.services.map((s: any) => ({
+      id: s.service_id || s.id,
+      name: s.name || s.service?.name || "Không rõ",
+      unit_price: Number(s.unit_price || s.service?.unit_price || 0),
       quantity: Number(s.quantity || 1),
     }));
-    console.log("✅ [Sanitized Services]", sanitized);
+    console.log("✅ Dịch vụ từ booking.services", sanitized);
     setServices(sanitized);
   } else {
+    // Nếu không có, fallback về localStorage nếu chưa hoàn tất
     const saved = localStorage.getItem(storageKey);
-    if (saved) {
+    if (saved && !isReadOnly) {
       const parsed = JSON.parse(saved);
-      console.log("📦 [Loaded from localStorage]", parsed);
+      console.log("📦 [Fallback] Dịch vụ từ localStorage", parsed);
       setServices(parsed);
     } else {
       setServices([]);
     }
   }
-}, [booking.id, isReadOnly]);
+}, [booking.id, booking.services]);
 
 
   useEffect(() => {

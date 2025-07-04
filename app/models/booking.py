@@ -78,12 +78,10 @@ class BookingService(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     booking_id = Column(UUID(as_uuid=True), ForeignKey("bookings.id"))
-
     service_id = Column(UUID(as_uuid=True), ForeignKey("services.id"))  # ✅ THÊM ForeignKey
     name = Column(String)
     unit_price = Column(Numeric)
     quantity = Column(Integer)
-
     booking = relationship("Booking", back_populates="services")
     service = relationship("Service")  # ✅ THÊM dòng này để joinedload có thể dùng
 
