@@ -172,19 +172,19 @@ useEffect(() => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
        body: JSON.stringify({
-        services: services.map((s) => ({
-          id: s.id,
-          name: s.name,
-          unit_price: s.unit_price,
-          quantity: s.quantity,
-        })),
+      services: services.map((s, idx) => ({
+      id: booking.services?.[idx]?.id || crypto.randomUUID(), // ✅ id riêng biệt cho mỗi dịch vụ (lần đầu hoàn tất)
+      service_id: s.id, // ✅ giữ lại service_id đúng với ID của dịch vụ
+      name: s.name,
+      unit_price: s.unit_price,
+      quantity: s.quantity,
+    })),
         grand_total: grandTotal,
         payment_method: paymentMethod,
         discount,
         amount_paid: paid, // ✅ Gửi số tiền khách đã trả
         debt_note: debtNote, // ✅ Gửi ghi chú công nợ nếu có
         log: `Khách thanh toán ${paid.toLocaleString("vi-VN")}đ bằng ${paymentMethod}`,
-        status, // ✅ Tự động xác định 'done' hoặc 'partial'
       })
       }
     );
