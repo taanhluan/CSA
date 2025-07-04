@@ -119,3 +119,13 @@
 .confirmBtn:hover {
   background: #7c3aed;
 }
+
+.status-done {
+  color: green;
+  font-weight: bold;
+}
+
+.status-partial {
+  color: orange;
+  font-weight: bold;
+}

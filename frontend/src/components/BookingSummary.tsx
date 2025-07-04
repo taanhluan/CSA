@@ -1,6 +1,12 @@
-import { useEffect, useState } from "react";
+
 import toast from "react-hot-toast";
 import styles from "./BookingSummary.module.css";
+import {
+  calculateServiceTotal,
+  calculateGrandTotal,
+  determineStatus,
+} from "../utils/bookingCalculations";
+import { useEffect, useState, useMemo } from "react";
 
 export interface ServiceItem {
   id: string;
@@ -22,9 +28,9 @@ interface SelectedService extends ServiceItem {
   quantity: number;
 }
 
-const BookingSummary = ({ booking, memberName, onCompleted }: BookingSummaryProps) => {
-  const isReadOnly = booking.status === "done";
-
+const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
+  const [localStatus, setLocalStatus] = useState(booking.status);
+  const isReadOnly = useMemo(() => localStatus === "done", [localStatus]);
   const [showServices, setShowServices] = useState(false);
   const [selectedServiceId, setSelectedServiceId] = useState("");
   const [quantity, setQuantity] = useState(1);
@@ -65,27 +71,46 @@ const BookingSummary = ({ booking, memberName, onCompleted }: BookingSummaryProp
     fetchAvailableServices();
   }, []);
 
-  useEffect(() => {
-    setPaymentMethod(booking.payment_method || "cash");
-    setDiscount(booking.discount || 0);
-    setDebtNote(booking.debt_note || "");
+ useEffect(() => {
+  // Khi booking mới được chọn, reset các state liên quan đến booking
+  setPaymentMethod(booking.payment_method || "cash");
+  setDiscount(booking.discount || 0);
+  setDiscountInput((booking.discount || 0).toLocaleString("vi-VN"));
+  setDebtNote(booking.debt_note || "");
+  setLocalStatus(booking.status);
 
-    setAmountPaid(booking.amount_paid ?? null);
-    setAmountInput(
-      booking.amount_paid ? booking.amount_paid.toLocaleString("vi-VN") : ""
-    );
-  }, [booking]);
+  if (booking.amount_paid !== undefined && booking.amount_paid !== null) {
+    setAmountPaid(booking.amount_paid);
+    setAmountInput(booking.amount_paid.toLocaleString("vi-VN"));
+  } else {
+    setAmountPaid(null);
+    setAmountInput("");
+  }
+}, [booking.id]); // ✅ chính xác hơn, chỉ reset khi booking.id thay đổi
 
-  useEffect(() => {
+
+useEffect(() => {
+  if (isReadOnly) {
+    const sanitized = (booking.services || []).map((s: any) => ({
+      id: s.service_id || s.id, // 👈 fix ở đây
+      name: s.name,
+      unit_price: Number(s.unit_price || 0),
+      quantity: Number(s.quantity || 1),
+    }));
+    console.log("✅ [Sanitized Services]", sanitized);
+    setServices(sanitized);
+  } else {
     const saved = localStorage.getItem(storageKey);
-    if (!isReadOnly && saved) {
-      setServices(JSON.parse(saved));
-    } else if (isReadOnly && booking.services && Array.isArray(booking.services)) {
-      setServices(booking.services);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      console.log("📦 [Loaded from localStorage]", parsed);
+      setServices(parsed);
     } else {
       setServices([]);
     }
-  }, [booking.id, booking.services, isReadOnly]);
+  }
+}, [booking.id, isReadOnly]);
+
 
   useEffect(() => {
     setDiscountInput(discount.toLocaleString("vi-VN"));
@@ -127,52 +152,50 @@ const BookingSummary = ({ booking, memberName, onCompleted }: BookingSummaryProp
     if (isReadOnly) return;
     setServices((prev) => prev.filter((s) => s.id !== id));
   };
-
-  const servicesTotal = services.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
-  const grandTotal = servicesTotal - booking.deposit_amount - discount;
-
-  const handleCompleteBooking = async () => {
-    if (isReadOnly) return;
-
-    const paid = amountPaid ?? grandTotal;
-    const status = paid >= grandTotal ? "done" : "partial";
-
-    try {
-      const res = await fetch(
-        `https://csa-backend-v90k.onrender.com/api/bookings/${booking.id}/complete`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            services: services.map((s) => ({
-              id: s.id,
-              name: s.name,
-              unit_price: s.unit_price,
-              quantity: s.quantity,
-            })),
-            grand_total: grandTotal,
-            payment_method: paymentMethod,
-            discount,
-            amount_paid: paid,
-            debt_note: debtNote,
-            log: `Khách thanh toán ${paid.toLocaleString("vi-VN")}đ bằng ${paymentMethod}`,
-            status,
-          }),
-        }
-      );
+  const servicesTotal = calculateServiceTotal(services);
+  const grandTotal = calculateGrandTotal(
+  servicesTotal,
+  booking.deposit_amount,
+  discount
+);
+  // Khi hoàn tất booking, gửi kèm paymentMethod và discount
+ const handleCompleteBooking = async () => {
+  if (isReadOnly) return;
+  const paid = amountPaid ?? grandTotal;
+  const status = determineStatus(paid, grandTotal);
+  try {
+    const res = await fetch(
+      `https://csa-backend-v90k.onrender.com/api/bookings/${booking.id}/complete`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+       body: JSON.stringify({
+        services: services.map((s) => ({
+          id: s.id,
+          name: s.name,
+          unit_price: s.unit_price,
+          quantity: s.quantity,
+        })),
+        grand_total: grandTotal,
+        payment_method: paymentMethod,
+        discount,
+        amount_paid: paid, // ✅ Gửi số tiền khách đã trả
+        debt_note: debtNote, // ✅ Gửi ghi chú công nợ nếu có
+        log: `Khách thanh toán ${paid.toLocaleString("vi-VN")}đ bằng ${paymentMethod}`,
+        status, // ✅ Tự động xác định 'done' hoặc 'partial'
+      })
+      }
+    );
 
       if (!res.ok) throw new Error("Failed to update booking");
 
-      toast.success("✅ Booking đã được cập nhật trạng thái!");
-      localStorage.removeItem(storageKey);
-
-      if (typeof onCompleted === "function") {
-        onCompleted();
-      }
-    } catch (err) {
-      toast.error("❌ Không thể cập nhật trạng thái");
-    }
-  };
+    toast.success("✅ Booking đã được cập nhật trạng thái!");
+    setLocalStatus(status); // ✅ cập nhật trạng thái trong local để cập nhật giao diện
+    localStorage.removeItem(storageKey);
+  } catch (err) {
+    toast.error("❌ Không thể cập nhật trạng thái");
+  }
+};
 
   return (
     <div className={styles.summaryCard}>
@@ -271,55 +294,62 @@ const BookingSummary = ({ booking, memberName, onCompleted }: BookingSummaryProp
               </div>
             )}
 
-            {services.length > 0 && (
-              <table className={styles.table}>
-                <thead className="bg-gray-100 text-left">
-                  <tr>
-                    <th className={styles.th}>Dịch vụ</th>
-                    <th className={styles.th}>Số lượng</th>
-                    <th className={styles.th}>Đơn giá</th>
-                    <th className={styles.th}>Thành tiền</th>
-                    {!isReadOnly && <th className={styles.th}>Xoá</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {services.map((s) => (
-                    <tr key={s.id}>
-                      <td className={styles.td}>{s.name}</td>
-                      <td className={styles.td}>
-                        {isReadOnly ? (
-                          s.quantity
-                        ) : (
-                          <input
-                            type="number"
-                            className={styles.inputQty}
-                            value={s.quantity}
-                            min={1}
-                            onChange={(e) => updateQuantity(s.id, Number(e.target.value))}
-                          />
-                        )}
-                      </td>
-                      <td className={styles.td} style={{ textAlign: "right" }}>
-                        {s.unit_price.toLocaleString("vi-VN")}đ
-                      </td>
-                      <td className={styles.td} style={{ textAlign: "right" }}>
-                        {(s.quantity * s.unit_price).toLocaleString("vi-VN")}đ
-                      </td>
-                      {!isReadOnly && (
-                        <td className={styles.td} style={{ textAlign: "right" }}>
-                          <button
-                            className="text-red-600 hover:text-red-800 text-xs"
-                            onClick={() => removeService(s.id)}
-                          >
-                            🗑️
-                          </button>
-                        </td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+           {services.length > 0 && (
+  <table className={styles.table}>
+    <thead className="bg-gray-100 text-left">
+      <tr>
+        <th className={styles.th}>Dịch vụ</th>
+        <th className={styles.th}>Số lượng</th>
+        <th className={styles.th}>Đơn giá</th>
+        <th className={styles.th}>Thành tiền</th>
+        {!isReadOnly && <th className={styles.th}>Xoá</th>}
+      </tr>
+    </thead>
+    <tbody>
+      {services.map((s) => {
+        const unitPrice = Number(s.unit_price || 0);
+        const quantity = Number(s.quantity || 1);
+        const total = unitPrice * quantity;
+
+        return (
+          <tr key={s.id}>
+            <td className={styles.td}>{s.name}</td>
+            <td className={styles.td}>
+              {isReadOnly ? (
+                quantity
+              ) : (
+                <input
+                  type="number"
+                  className={styles.inputQty}
+                  value={quantity}
+                  min={1}
+                  onChange={(e) => updateQuantity(s.id, Number(e.target.value))}
+                />
+              )}
+            </td>
+            <td className={styles.td} style={{ textAlign: "right" }}>
+              {unitPrice.toLocaleString("vi-VN")}đ
+            </td>
+            <td className={styles.td} style={{ textAlign: "right" }}>
+              {total.toLocaleString("vi-VN")}đ
+            </td>
+            {!isReadOnly && (
+              <td className={styles.td} style={{ textAlign: "right" }}>
+                <button
+                  className="text-red-600 hover:text-red-800 text-xs"
+                  onClick={() => removeService(s.id)}
+                >
+                  🗑️
+                </button>
+              </td>
             )}
+          </tr>
+        );
+      })}
+    </tbody>
+  </table>
+)}
+
           </div>
         )}
       </div>
@@ -388,6 +418,19 @@ const BookingSummary = ({ booking, memberName, onCompleted }: BookingSummaryProp
         <p className="text-lg font-bold text-indigo-700 mt-2">
           💰 Tổng thanh toán: {grandTotal.toLocaleString("vi-VN")}đ
         </p>
+        {amountPaid !== null && (
+        <>
+          <p>💸 Khách đã trả: <b>{amountPaid.toLocaleString("vi-VN")}đ</b></p>
+          <p>
+            🧾 Trạng thái:{" "}
+            <span className={styles[`status-${determineStatus(amountPaid, grandTotal)}`]}>
+              {determineStatus(amountPaid, grandTotal) === "done"
+                ? "✅ Hoàn tất"
+                : "🕗 Thiếu tiền"}
+            </span>
+          </p>
+        </>
+      )}
       </div>
 
       {!isReadOnly && (

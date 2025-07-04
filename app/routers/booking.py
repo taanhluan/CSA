@@ -52,7 +52,7 @@ def create_booking(data: BookingCreate, db: Session = Depends(get_db)):
     return booking
 
 # ------------------------------
-# Lấy danh sách booking theo ngày (yyyy-mm-dd)
+# Lấy danh sách booking theo ngày
 # ------------------------------
 @router.get("/by-date", response_model=List[BookingResponse])
 def get_bookings_by_date(date_str: str, db: Session = Depends(get_db)):
@@ -70,7 +70,10 @@ def get_bookings_by_date(date_str: str, db: Session = Depends(get_db)):
 
     bookings = (
         db.query(Booking)
-        .options(joinedload(Booking.players), joinedload(Booking.services))
+        .options(
+            joinedload(Booking.players),
+            joinedload(Booking.services).joinedload(BookingService.service)
+        )
         .filter(Booking.date_time.between(start_utc, end_utc))
         .order_by(Booking.date_time.asc())
         .all()
@@ -78,7 +81,7 @@ def get_bookings_by_date(date_str: str, db: Session = Depends(get_db)):
     return bookings
 
 # ------------------------------
-# ✅ Lấy danh sách booking hôm nay
+# Lấy danh sách booking hôm nay
 # ------------------------------
 @router.get("/today", response_model=List[BookingResponse])
 def get_today_bookings(db: Session = Depends(get_db)):
@@ -93,7 +96,10 @@ def get_today_bookings(db: Session = Depends(get_db)):
 
     bookings = (
         db.query(Booking)
-        .options(joinedload(Booking.players), joinedload(Booking.services))
+        .options(
+            joinedload(Booking.players),
+            joinedload(Booking.services).joinedload(BookingService.service)
+        )
         .filter(Booking.date_time.between(start_utc, end_utc))
         .order_by(Booking.date_time.asc())
         .all()
@@ -101,13 +107,16 @@ def get_today_bookings(db: Session = Depends(get_db)):
     return bookings
 
 # ------------------------------
-# ✅ Lấy booking chưa thanh toán
+# Lấy booking chưa thanh toán
 # ------------------------------
 @router.get("/pending", response_model=List[BookingResponse])
 def get_pending_bookings(db: Session = Depends(get_db)):
     bookings = (
         db.query(Booking)
-        .options(joinedload(Booking.players), joinedload(Booking.services))
+        .options(
+            joinedload(Booking.players),
+            joinedload(Booking.services).joinedload(BookingService.service)
+        )
         .filter(Booking.status != BookingStatus.done)
         .order_by(Booking.date_time.asc())
         .all()
@@ -115,7 +124,7 @@ def get_pending_bookings(db: Session = Depends(get_db)):
     return bookings
 
 # ------------------------------
-# ✅ Hoàn tất thanh toán (update status = done + lưu dịch vụ)
+# Hoàn tất thanh toán
 # ------------------------------
 @router.post("/{booking_id}/complete")
 def complete_booking(booking_id: UUID, payload: BookingCompleteInput, db: Session = Depends(get_db)):
@@ -124,14 +133,9 @@ def complete_booking(booking_id: UUID, payload: BookingCompleteInput, db: Sessio
         if not booking:
             raise HTTPException(status_code=404, detail="Booking not found")
 
-        # ✅ Chặn sửa nếu booking đã thanh toán
-        if booking.status == BookingStatus.done:
-            raise HTTPException(status_code=400, detail="Booking has already been completed")
-
         # Xóa dịch vụ cũ nếu có
         db.query(BookingService).filter(BookingService.booking_id == booking_id).delete()
 
-        # Thêm dịch vụ mới
         for s in payload.services:
             db.add(BookingService(
                 id=uuid4(),
@@ -142,13 +146,9 @@ def complete_booking(booking_id: UUID, payload: BookingCompleteInput, db: Sessio
                 quantity=s.quantity
             ))
 
-        # === ✅ Cập nhật thông tin booking ===
         if payload.amount_paid is not None:
             booking.amount_paid = payload.amount_paid
-            if payload.amount_paid >= payload.grand_total:
-                booking.status = BookingStatus.done
-            else:
-                booking.status = BookingStatus.partial
+            booking.status = BookingStatus.done if payload.amount_paid >= payload.grand_total else BookingStatus.partial
         else:
             booking.amount_paid = payload.grand_total
             booking.status = BookingStatus.done
@@ -156,15 +156,11 @@ def complete_booking(booking_id: UUID, payload: BookingCompleteInput, db: Sessio
         booking.grand_total = payload.grand_total
         booking.discount = payload.discount
         booking.payment_method = payload.payment_method
-        booking.debt_note = payload.debt_note  # ✅ Ghi chú nợ nếu có
+        booking.debt_note = payload.debt_note
 
-        # === ✅ Ghi log lịch sử ===
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         new_log = f"[{timestamp}] {payload.log}"
-        if booking.log_history:
-            booking.log_history += f"\n{new_log}"
-        else:
-            booking.log_history = new_log
+        booking.log_history = f"{booking.log_history}\n{new_log}" if booking.log_history else new_log
 
         db.commit()
         return {"message": "Booking updated with payment, services, and status"}
@@ -174,7 +170,7 @@ def complete_booking(booking_id: UUID, payload: BookingCompleteInput, db: Sessio
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 # ------------------------------
-# ✅ Xoá booking (chỉ cho phép xoá nếu chưa thanh toán)
+# Xoá booking nếu chưa thanh toán
 # ------------------------------
 @router.delete("/{booking_id}")
 def delete_booking(booking_id: UUID, db: Session = Depends(get_db)):
@@ -193,13 +189,16 @@ def delete_booking(booking_id: UUID, db: Session = Depends(get_db)):
     return {"message": "Booking deleted successfully"}
 
 # ------------------------------
-# ✅ Lấy danh sách booking còn nợ (status = partial)
+# Lấy danh sách booking còn nợ
 # ------------------------------
 @router.get("/partial", response_model=List[BookingResponse])
 def get_partial_bookings(db: Session = Depends(get_db)):
     bookings = (
         db.query(Booking)
-        .options(joinedload(Booking.players), joinedload(Booking.services))
+        .options(
+            joinedload(Booking.players),
+            joinedload(Booking.services).joinedload(BookingService.service)
+        )
         .filter(Booking.status == BookingStatus.partial)
         .order_by(Booking.date_time.desc())
         .all()

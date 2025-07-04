@@ -255,25 +255,28 @@ const BookingForm = () => {
                         {" | "}💵 Tổng tiền: {grandTotal.toLocaleString("vi-VN")}đ
                         {" | "}🧾 Thanh toán: {b.payment_method || "Chưa có thông tin"}
                       </span>
-                      {b.status === "booked" && (
-                        <div className={styles.bookingActions}>
-                          <span className={styles.statusBadge}>Chưa thanh toán</span>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteBooking(b.id);
-                            }}
-                            className={styles.deleteButton}
-                          >
-                            ❌ Xóa
-                          </button>
-                        </div>
-                      )}
-                      {b.status === "done" && (
-                        <span className="text-green-800 bg-green-100 text-xs px-2 py-0.5 rounded">
-                          Đã thanh toán
-                        </span>
-                      )}
+                    {b.status === "done" ? (
+                    <span className="text-green-800 bg-green-100 text-xs px-2 py-0.5 rounded">
+                      ✅ Hoàn tất
+                    </span>
+                  ) : b.status === "partial" ? (
+                    <span className="text-yellow-800 bg-yellow-100 text-xs px-2 py-0.5 rounded">
+                      🕗 Thiếu tiền
+                    </span>
+                  ) : (
+                    <div className={styles.bookingActions}>
+                      <span className={styles.statusBadge}>⏳ Chưa thanh toán</span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteBooking(b.id);
+                        }}
+                        className={styles.deleteButton}
+                      >
+                        ❌ Xóa
+                      </button>
+                    </div>
+                  )}
                     </div>
                     <div className="text-gray-500 text-xs">
                       👤 {getBookingDisplayName(b)}
