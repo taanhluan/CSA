@@ -5,8 +5,11 @@ import {
   calculateServiceTotal,
   calculateGrandTotal,
   determineStatus,
+  calculateDebt,
 } from "../utils/bookingCalculations";
 import { useEffect, useState, useMemo } from "react";
+
+
 
 export interface ServiceItem {
   id: string;
@@ -431,6 +434,12 @@ useEffect(() => {
                 : "🕗 Thiếu tiền"}
             </span>
           </p>
+          {determineStatus(amountPaid, grandTotal) === "partial" && (
+          <p>
+            📌 Còn lại:{" "}
+            <b>{calculateDebt(amountPaid, grandTotal).toLocaleString("vi-VN")}đ</b>
+          </p>
+        )}
         </>
       )}
       </div>

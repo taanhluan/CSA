@@ -43,3 +43,16 @@ export function determineStatus(
 ): "done" | "partial" {
   return amountPaid >= grandTotal ? "done" : "partial";
 }
+
+/**
+ * Tính số tiền còn nợ nếu khách chưa trả đủ.
+ * @param amountPaid Số tiền khách đã trả
+ * @param grandTotal Tổng tiền cần thanh toán
+ * @returns Số tiền còn nợ (>= 0)
+ */
+export function calculateDebt(
+  amountPaid: number,
+  grandTotal: number
+): number {
+  return Math.max(grandTotal - amountPaid, 0);
+}
