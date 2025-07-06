@@ -22,11 +22,15 @@ const AccessPage = () => {
   const navigate = useNavigate();
   const { currentUser, setCurrentUser } = useAuth();
 
-  useEffect(() => {
-    if (currentUser?.role === "admin") {
-      navigate("/");
+useEffect(() => {
+  if (currentUser) {
+    if (currentUser.role === "admin") {
+      navigate("/dashboard"); // hoặc "/"
+    } else if (currentUser.role === "staff") {
+      navigate("/booking");
     }
-  }, [currentUser, navigate]);
+  }
+}, [currentUser, navigate]);
 
   const handleLogin = async () => {
     if (!phone || !password) {

@@ -6,6 +6,8 @@ import Services from "../pages/Services";
 import AccessPage from "../pages/AccessPage";
 import RequireAuth from "./RequireAuth";
 import DashboardLayout from "../layouts/DashboardLayout";
+import BookingSummaryPage from "../pages/BookingSummaryPage"; // ✅ thêm dòng này
+
 
 function AppRoutes() {
   return (

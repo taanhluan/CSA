@@ -1,4 +1,3 @@
-// src/layouts/DashboardLayout.tsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
@@ -20,10 +19,12 @@ const DashboardLayout = () => {
     }
 
     const user = JSON.parse(savedUser);
-    if (user.role !== "admin") {
-      navigate("/access");
-    } else {
+
+    // ✅ Cho phép cả admin và staff
+    if (user.role === "admin" || user.role === "staff") {
       setIsAllowed(true);
+    } else {
+      navigate("/access");
     }
   }, [navigate]);
 
@@ -33,7 +34,6 @@ const DashboardLayout = () => {
     <div className="flex flex-col h-screen bg-gray-100 relative">
       {/* Header nằm TRÊN sidebar */}
       <Header onToggleSidebar={() => setIsMobileMenuOpen(true)} />
-
 
       {/* Nút toggle ☰ trên mobile */}
       <button

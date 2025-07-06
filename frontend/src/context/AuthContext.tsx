@@ -5,7 +5,7 @@ interface User {
   name: string;
   phone: string;
   email: string;
-  role: string;
+  role: string; // "admin" | "staff"
   created_at: string;
 }
 
@@ -14,6 +14,8 @@ interface AuthContextType {
   setCurrentUser: (user: User | null) => void;
   isLoading: boolean;
   logout: () => void;
+  isAdmin: boolean;
+  isStaff: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -21,6 +23,8 @@ const AuthContext = createContext<AuthContextType>({
   setCurrentUser: () => {},
   isLoading: true,
   logout: () => {},
+  isAdmin: false,
+  isStaff: false,
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -44,8 +48,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setCurrentUser(null);
   };
 
+  const isAdmin = currentUser?.role === "admin";
+  const isStaff = currentUser?.role === "staff";
+
   return (
-    <AuthContext.Provider value={{ currentUser, setCurrentUser, isLoading, logout }}>
+    <AuthContext.Provider
+      value={{ currentUser, setCurrentUser, isLoading, logout, isAdmin, isStaff }}
+    >
       {children}
     </AuthContext.Provider>
   );

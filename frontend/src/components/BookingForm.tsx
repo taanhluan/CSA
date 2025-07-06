@@ -34,6 +34,7 @@ const BookingForm = () => {
   const [todayBookings, setTodayBookings] = useState<any[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [searchText, setSearchText] = useState("");
 
   useEffect(() => {
     getMembers().then(setMembers).catch(() => toast.error("❌ Lỗi khi lấy danh sách hội viên"));
@@ -109,9 +110,15 @@ const BookingForm = () => {
     }
   };
 
-  const filteredBookings = todayBookings.filter((b) =>
-    statusFilter ? b.status === statusFilter : true
-  );
+  const filteredBookings = todayBookings.filter((b) => {
+  const matchStatus = statusFilter ? b.status === statusFilter : true;
+  const name = b.member_id
+    ? members.find((m) => m.id === b.member_id)?.full_name || ""
+    : b.guest_name || "";
+
+  const matchSearch = name.toLowerCase().includes(searchText.toLowerCase());
+  return matchStatus && matchSearch;
+});
 
   const getBookingDisplayName = (b: any) =>
     b.member_id
@@ -200,6 +207,14 @@ const BookingForm = () => {
 
         <div className="bg-white rounded shadow p-4 mt-6">
           <h3 className="text-lg font-semibold text-indigo-700 mb-2">📅 Booking theo ngày</h3>
+
+          <input
+  type="text"
+  placeholder="🔍 Tìm booking..."
+  className="border px-3 py-1 rounded w-full sm:max-w-xs text-sm mb-3"
+  value={searchText}
+  onChange={(e) => setSearchText(e.target.value)}
+/>
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3">
             <div>

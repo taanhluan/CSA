@@ -1,19 +1,19 @@
+/* ====== MOBILE-FIRST OPTIMIZED CSS ====== */
+
 /* Layout chính */
 .container {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-  padding: 1.5rem;
+  gap: 1rem;
+  padding: 1rem;
   max-width: 1200px;
   margin: 0 auto;
 }
-
 @media (min-width: 768px) {
   .container {
     padding: 2rem;
   }
 }
-
 @media (min-width: 1280px) {
   .container {
     display: grid;
@@ -40,7 +40,7 @@
   gap: 0.5rem;
 }
 
-/* Label và input form */
+/* Form labels và inputs */
 .label {
   font-weight: 600;
   margin-bottom: 0.5rem;
@@ -54,11 +54,10 @@
   padding: 0.75rem 1rem;
   border: 1px solid #d1d5db;
   border-radius: 0.5rem;
-  font-size: 1rem;
+  font-size: 0.95rem;
   margin-bottom: 1.5rem;
   background-color: #f9fafb;
 }
-
 .input:focus,
 .select:focus {
   outline: none;
@@ -67,30 +66,29 @@
   background-color: #fff;
 }
 
+/* Row layout */
 .row {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   margin-bottom: 1.5rem;
 }
-
 @media (min-width: 768px) {
   .row {
     flex-direction: row;
   }
 }
-
 .w50 {
   flex: 1;
 }
 
+/* Player inputs */
 .playerRow {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   margin-bottom: 1rem;
 }
-
 @media (min-width: 640px) {
   .playerRow {
     flex-direction: row;
@@ -118,12 +116,13 @@
   margin-bottom: 1.5rem;
 }
 
+/* Nút lưu */
 .saveButton {
   width: 100%;
   background: #4f46e5;
   color: white;
-  padding: 0.9rem;
-  font-size: 1rem;
+  padding: 1rem;
+  font-size: 1.1rem;
   border: none;
   font-weight: 600;
   border-radius: 0.5rem;
@@ -134,7 +133,6 @@
   align-items: center;
   gap: 8px;
 }
-
 .saveButton:hover {
   background: #4338ca;
 }
@@ -147,13 +145,11 @@
   padding: 1.5rem;
   margin-top: 1.5rem;
 }
-
 @media (min-width: 1280px) {
   .bookingCard {
     margin-top: 0;
   }
 }
-
 .bookingCard h3 {
   font-size: 1.2rem;
   font-weight: 700;
@@ -164,13 +160,13 @@
   margin-bottom: 1rem;
 }
 
+/* Bộ lọc ngày */
 .wrapFilterRow {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   margin-bottom: 1rem;
 }
-
 @media (min-width: 640px) {
   .wrapFilterRow {
     flex-direction: row;
@@ -194,7 +190,6 @@
   background-color: #f9fafb;
   font-size: 0.9rem;
 }
-
 .dateFilter input:focus,
 .dateFilter select:focus {
   outline: none;
@@ -210,6 +205,7 @@
   white-space: nowrap;
 }
 
+/* Danh sách booking */
 .bookingList {
   margin-top: 1rem;
   max-height: 300px;
@@ -218,11 +214,12 @@
   border-top: 1px solid #e5e7eb;
 }
 
-/* Layout mỗi item */
+/* Item từng booking */
 .bookingItemRow {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
   padding: 0.75rem 1rem;
   margin-bottom: 0.75rem;
   border: 1px solid #e5e7eb;
@@ -231,9 +228,15 @@
   transition: background-color 0.2s ease;
   cursor: pointer;
 }
-
 .bookingItemRow:hover {
   background-color: #eef2ff;
+}
+@media (min-width: 640px) {
+  .bookingItemRow {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
 }
 
 .bookingInfo {
@@ -242,7 +245,7 @@
 }
 
 .bookingMeta {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #374151;
   margin-bottom: 0.3rem;
 }
@@ -257,8 +260,15 @@
   flex-wrap: wrap;
   gap: 4px;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
+  width: 100%;
   min-width: 120px;
+}
+@media (min-width: 640px) {
+  .bookingActions {
+    justify-content: flex-end;
+    width: auto;
+  }
 }
 
 .statusBadge {
@@ -282,7 +292,6 @@
   transition: all 0.2s ease;
   white-space: nowrap;
 }
-
 .deleteButton:hover {
   background-color: #fee2e2;
   color: #b91c1c;
