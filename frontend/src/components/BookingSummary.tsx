@@ -5,7 +5,7 @@ import {
   calculateServiceTotal,
   calculateGrandTotal,
   determineStatus,
-  calculateDebt,
+  calculateDebtAmount, // ✅ Tên hàm đúng
 } from "../utils/bookingCalculations";
 import { useEffect, useState, useMemo } from "react";
 
@@ -29,6 +29,7 @@ interface BookingSummaryProps {
 
 interface SelectedService extends ServiceItem {
   quantity: number;
+  service_id?: string; // ✅ thêm dòng này để TypeScript không báo lỗi
 }
 
 const BookingSummary = ({ booking, memberName }: BookingSummaryProps) => {
@@ -96,11 +97,12 @@ useEffect(() => {
   // Ưu tiên lấy từ booking.services nếu có (kể cả khi chưa "done")
   if (booking.services && booking.services.length > 0) {
     const sanitized = booking.services.map((s: any) => ({
-      id: s.service_id || s.id,
-      name: s.name || s.service?.name || "Không rõ",
-      unit_price: Number(s.unit_price || s.service?.unit_price || 0),
-      quantity: Number(s.quantity || 1),
-    }));
+  id: s.id || crypto.randomUUID(), // giữ id nếu có
+  service_id: s.service_id || s.id,
+  name: s.name || s.service?.name || s.service_name || "Không rõ", // ✅ fallback thêm field
+  unit_price: Number(s.unit_price || s.service?.unit_price || 0),
+  quantity: Number(s.quantity || 1),
+}));
     console.log("✅ Dịch vụ từ booking.services", sanitized);
     setServices(sanitized);
   } else {
@@ -167,6 +169,7 @@ useEffect(() => {
  const handleCompleteBooking = async () => {
   if (isReadOnly) return;
   const paid = amountPaid ?? grandTotal;
+  const debtAmount = calculateDebtAmount(grandTotal, paid);
   const status = determineStatus(paid, grandTotal);
   try {
     const res = await fetch(
@@ -175,19 +178,20 @@ useEffect(() => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
        body: JSON.stringify({
-      services: services.map((s, idx) => ({
-      id: booking.services?.[idx]?.id || crypto.randomUUID(), // ✅ id riêng biệt cho mỗi dịch vụ (lần đầu hoàn tất)
-      service_id: s.id, // ✅ giữ lại service_id đúng với ID của dịch vụ
-      name: s.name,
-      unit_price: s.unit_price,
-      quantity: s.quantity,
-    })),
-        grand_total: grandTotal,
-        payment_method: paymentMethod,
-        discount,
-        amount_paid: paid, // ✅ Gửi số tiền khách đã trả
-        debt_note: debtNote, // ✅ Gửi ghi chú công nợ nếu có
-        log: `Khách thanh toán ${paid.toLocaleString("vi-VN")}đ bằng ${paymentMethod}`,
+        services: services.map((s) => ({
+        id: s.id || crypto.randomUUID(),
+        service_id: s.service_id || s.id,        // sẽ không lỗi nếu đã khai báo trong SelectedService
+        name: s.name || "Không rõ",
+        unit_price: s.unit_price || 0,
+        quantity: s.quantity || 1,
+      })),
+          grand_total: grandTotal,
+          payment_method: paymentMethod,
+          discount,
+          amount_paid: paid,
+          debt_amount: debtAmount,
+          debt_note: debtNote,
+          log: `Khách thanh toán ${paid.toLocaleString("vi-VN")}đ bằng ${paymentMethod}`,
       })
       }
     );
@@ -437,7 +441,7 @@ useEffect(() => {
           {determineStatus(amountPaid, grandTotal) === "partial" && (
           <p>
             📌 Còn lại:{" "}
-            <b>{calculateDebt(amountPaid, grandTotal).toLocaleString("vi-VN")}đ</b>
+            <b>{calculateDebtAmount(grandTotal, amountPaid).toLocaleString("vi-VN")}đ</b>
           </p>
         )}
         </>

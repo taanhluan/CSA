@@ -156,6 +156,7 @@ def complete_booking(booking_id: UUID, payload: BookingCompleteInput, db: Sessio
         booking.grand_total = payload.grand_total
         booking.discount = payload.discount
         booking.payment_method = payload.payment_method
+        booking.debt_amount = payload.debt_amount
         booking.debt_note = payload.debt_note
 
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

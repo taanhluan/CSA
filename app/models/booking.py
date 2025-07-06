@@ -38,21 +38,18 @@ class Booking(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     member_id = Column(UUID(as_uuid=True), ForeignKey("members.id"), nullable=True)
     member = relationship("Member", back_populates="bookings")
-
     type = Column(Enum(BookingType), nullable=False)
     status = Column(Enum(BookingStatus), default=BookingStatus.booked)
-
     date_time = Column(DateTime, nullable=False)
     duration = Column(Integer, nullable=False)
     deposit_amount = Column(Numeric, nullable=True)
-
     grand_total = Column(Integer, nullable=True)
     discount = Column(Integer, default=0)
     payment_method = Column(String, default="cash")
     amount_paid = Column(Numeric, nullable=True)  # ✅ Lưu số tiền khách đã thanh toán
+    debt_amount = Column(Numeric, default=0)  # ✅ Số tiền còn nợ do FE tính
     log_history = Column(Text, nullable=True)
     debt_note = Column(Text, nullable=True)
-
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # 👥 Danh sách người chơi
@@ -94,8 +91,6 @@ class BookingPlayer(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     booking_id = Column(UUID(as_uuid=True), ForeignKey("bookings.id"))
-
     player_name = Column(String)
     is_leader = Column(Boolean, default=False)
-
     booking = relationship("Booking", back_populates="players")

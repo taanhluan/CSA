@@ -15,10 +15,13 @@ class BookingType(str, Enum):
 class BookingStatus(str, Enum):
     booked = "booked"
     checked_in = "checked-in"
-    partial = "partial"       # ✅ Thêm dòng này
+    partial = "partial"
     done = "done"
-    pending = "pending"       # ✅ Thêm dòng này nếu bạn xử lý gom booked/checked_in/partial
+    pending = "pending"  # dùng để gom các trạng thái chưa thanh toán hoàn tất
 
+class PaymentMethod(str, Enum):
+    cash = "cash"
+    bank = "bank"
 
 # ------------------------------
 # PLAYER SCHEMAS
@@ -41,7 +44,7 @@ class BookingPlayerSchema(BaseModel):
 
 class BookingServiceItem(BaseModel):
     id: UUID
-    service_id: UUID  # ✅ thêm dòng này để frontend có thể lấy đúng
+    service_id: UUID
     name: str
     unit_price: int
     quantity: int
@@ -70,17 +73,18 @@ class BookingResponse(BaseModel):
     type: BookingType
     deposit_amount: Optional[float]
     amount_paid: Optional[float] = None
+    debt_amount: Optional[float] = None
     created_at: datetime
 
     players: List[BookingPlayerSchema] = []
     services: List[BookingServiceItem] = []
 
-    # ➕ Các trường mới để trả về thông tin thanh toán
+    # ➕ Thông tin thanh toán
     grand_total: Optional[int] = None
     discount: Optional[int] = None
     payment_method: Optional[str] = None
     log_history: Optional[str] = None
-    debt_note: Optional[str] = None  # ✅ Ghi chú nợ
+    debt_note: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -92,7 +96,8 @@ class BookingCompleteInput(BaseModel):
     services: List[BookingServiceItem]
     grand_total: int
     discount: int
-    payment_method: Literal["cash", "bank"]
+    payment_method: PaymentMethod
     amount_paid: Optional[float] = None
+    debt_amount: Optional[float] = None
     log: str
-    debt_note: Optional[str] = None  # ✅ Cho phép nhập ghi chú công nợ
+    debt_note: Optional[str] = None

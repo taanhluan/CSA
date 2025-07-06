@@ -1,7 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import StatCard from "../components/StatCard";
 import styles from "./Dashboard.module.css";
 import detailStyles from "./DetailTable.module.css";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 type ReportType = "daily" | "weekly" | "monthly" | "quarterly" | "yearly";
 
@@ -104,6 +112,20 @@ const Dashboard = () => {
     fetchStats();
   }, [rangeType, selectedDate]);
 
+  const pieData = useMemo(() => {
+    return [
+      stats.completedBookingsToday > 0 && { name: "✅ Đã thanh toán", value: stats.completedBookingsToday },
+      stats.pendingBookings > 0 && { name: "⏳ Chưa hoàn tất", value: stats.pendingBookings },
+      stats.partialBookings > 0 && { name: "🧾 Booking còn thiếu", value: stats.partialBookings },
+    ].filter(Boolean) as { name: string; value: number }[];
+  }, [stats]);
+
+  const colorMap: Record<string, string> = {
+    "✅ Đã thanh toán": "#34d399",
+    "⏳ Chưa hoàn tất": "#f87171",
+    "🧾 Booking còn thiếu": "#f472b6",
+  };
+
   return (
     <div className={styles.wrapper}>
       <div className={styles.header}>
@@ -153,7 +175,28 @@ const Dashboard = () => {
           onClick={() => fetchDetails("revenue", "Chi tiết doanh thu")} />
       </div>
 
-      {/* Modal */}
+      {/* Biểu đồ PieChart */}
+      <div className="mt-10 bg-white p-6 rounded-xl shadow-md max-w-4xl mx-auto">
+        <h3 className="text-lg font-semibold mb-4">📊 Tỷ lệ booking theo trạng thái</h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <PieChart>
+            <Pie
+              dataKey="value"
+              data={pieData}
+              outerRadius={100}
+              label={({ name, percent }) => `${name} (${(percent ?? 0 * 100).toFixed(1)}%)`}
+              animationDuration={600}>
+              {pieData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={colorMap[entry.name]} />
+              ))}
+            </Pie>
+            <Tooltip formatter={(value, name) => [`${value}`, name]} />
+            <Legend />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Modal xem chi tiết */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
           <div className="bg-white w-[90%] max-w-5xl p-6 rounded-lg shadow-2xl relative">
@@ -165,45 +208,63 @@ const Dashboard = () => {
               <div className={detailStyles.tableContainer}>
                 <table className={detailStyles.table}>
                   <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Khách</th>
-                      <th>Ngày</th>
-                      <th>Trạng thái</th>
-                      <th>Tổng tiền</th>
-                      {(detailType === "partial" || detailType === "debt") && (
-                        <>
-                          <th>Đã trả</th>
-                          <th>Còn nợ</th>
-                          <th>Ghi chú</th>
-                          <th>Ghi log gần nhất</th>
-                        </>
-)}
-                    </tr>
-                  </thead>
+                  <tr>
+                    <th>Khách</th>
+                    <th>Ngày</th>
+                    <th>Trạng thái</th>
+                    <th>Tổng tiền</th>
+                    {(detailType === "partial" || detailType === "debt") && (
+                    <>
+                      <th>Giảm giá</th>
+                      <th>Tiền cọc</th>
+                      <th>Đã trả</th>
+                      <th>Còn nợ</th>
+                      <th>Ghi chú</th>
+                      <th>Ghi log gần nhất</th>
+                    </>
+                  )}
+                  </tr>
+                </thead>
                   <tbody>
                     {detailData.map((item: any) => (
                       <tr key={item.id} className={detailStyles.hoverRow}>
-                        <td>{item.id}</td>
-                        <td>{item.member_name || "Khách vãng lai"}</td>
-                        <td>{new Date(item.date_time).toLocaleString("vi-VN")}</td>
-                        <td>{item.status}</td>
-                        <td>{item.grand_total?.toLocaleString("vi-VN")}₫</td>
-                        {(detailType === "partial" || detailType === "debt") && (
-                      <>
-                        <td>{item.amount_paid?.toLocaleString("vi-VN") || 0}₫</td>
-                        <td>{(item.grand_total - (item.amount_paid || 0)).toLocaleString("vi-VN")}₫</td>
-                        <td>{item.debt_note ? item.debt_note : <span className={detailStyles.debtNote}>Không có</span>}</td>
+                        <td>{item.member_name || item.full_name || "Khách vãng lai"}</td>
                         <td>
-                          {item.log_history
-                            ? item.log_history.split("\n").pop()
+                          {item.date_time
+                            ? new Date(item.date_time).toLocaleString("vi-VN")
                             : <span className={detailStyles.debtNote}>Không có</span>}
                         </td>
-                      </>
-                    )}
+                        <td>{item.status}</td>
+                        <td>{Number(item.grand_total ?? 0).toLocaleString("vi-VN")}₫</td>
+
+                        {/* Chỉ hiển thị các cột chuyên biệt nếu là báo cáo công nợ hoặc thiếu */}
+                        {(detailType === "partial" || detailType === "debt") && (
+                          <>
+                            <td>{Number(item.discount ?? 0).toLocaleString("vi-VN")}₫</td>
+                            <td>{Number(item.deposit_amount ?? 0).toLocaleString("vi-VN")}₫</td>
+                            <td>{Number(item.amount_paid ?? 0).toLocaleString("vi-VN")}₫</td>
+                            <td>
+                              {Number(
+                                (item.grand_total ?? 0) - (item.amount_paid ?? 0)
+                              ).toLocaleString("vi-VN")}₫
+                            </td>
+                            <td>
+                              {item.debt_note
+                                ? item.debt_note
+                                : <span className={detailStyles.debtNote}>Không có</span>}
+                            </td>
+                            <td>
+                              {item.log_history
+                                ? item.log_history.split("\n").pop()
+                                : <span className={detailStyles.debtNote}>Không có</span>}
+                            </td>
+                          </>
+                        )}
                       </tr>
                     ))}
                   </tbody>
+
+
                 </table>
               </div>
             )}

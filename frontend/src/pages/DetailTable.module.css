@@ -1,69 +1,78 @@
+/* === Container Table Modal === */
 .tableContainer {
   overflow-x: auto;
+  overflow-y: auto;
   max-height: 70vh;
   background: #ffffff;
-  border-radius: 0.75rem;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-  padding: 1rem;
-  margin-top: 1rem;
+  border-radius: 1rem;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+  padding: 1rem 1.5rem;
+  margin-top: 1.5rem;
   border: 1px solid #e5e7eb;
 }
 
-/* Table */
+/* === Base Table === */
 .table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.875rem;
-  min-width: 700px;
+  font-size: 0.9rem;
+  min-width: 1100px;
+  color: #1f2937;
   table-layout: auto;
-  color: #1f2937; /* slate-800 */
 }
 
-/* Header */
+/* === Table Header === */
 .table th {
-  background: linear-gradient(to right, #dbeafe, #e0e7ff);
+  background: linear-gradient(to right, #e0e7ff, #dbeafe);
   color: #1e3a8a;
-  font-weight: 600;
-  padding: 0.6rem 0.75rem;
-  text-align: left;
+  font-weight: 700;
+  padding: 0.75rem 1rem;
+  text-align: center;
+  border-bottom: 2px solid #cbd5e1;
+  white-space: nowrap;
   position: sticky;
   top: 0;
-  z-index: 1;
-  border-bottom: 2px solid #e5e7eb;
-  white-space: nowrap;
+  z-index: 2;
 }
 
-/* Cell */
+/* === Table Cell === */
 .table td {
-  padding: 0.6rem 0.75rem;
-  border-bottom: 1px solid #f3f4f6;
-  background-color: #ffffff;
+  padding: 0.75rem 1rem;
+  text-align: center;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
   white-space: nowrap;
-  vertical-align: top;
+  background-color: #fff;
+  transition: background 0.3s;
 }
 
-/* Stripe */
+/* === Striping Row === */
 .table tbody tr:nth-child(odd) {
   background-color: #f9fafb;
 }
 
-/* Hover effect */
+/* === Hover Row === */
 .table tbody tr:hover {
-  background-color: #f1f5f9;
-  transition: background-color 0.2s ease;
+  background-color: #f0f9ff;
+  transition: background-color 0.3s ease;
 }
 
-/* Ghi chú nợ */
+/* === Special Hover Row Highlight (custom class support) === */
+.hoverRow:hover {
+  background-color: #e0f2fe !important;
+}
+
+/* === Ghi chú công nợ mờ mờ === */
 .debtNote {
   font-style: italic;
   color: #9ca3af;
 }
 
-/* Responsive */
+/* === Responsive Support === */
 @media (max-width: 768px) {
   .table {
     font-size: 0.8rem;
-    min-width: 100%;
+    min-width: 1000px;
   }
 
   .table th,
@@ -74,12 +83,4 @@
   .tableContainer {
     padding: 0.5rem;
   }
-}
-.debtNote {
-  color: #999;
-  font-style: italic;
-}
-
-.hoverRow:hover {
-  background-color: #f8f9fa;
 }

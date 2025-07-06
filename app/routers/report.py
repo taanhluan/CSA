@@ -129,6 +129,12 @@ def report_summary(
             for s in b.services
         )
 
+        total_debt = sum(
+        (b.grand_total or 0) - (b.amount_paid or 0)
+        for b in bookings
+        if b.status == BookingStatus.partial
+        )
+
         member_count = db.query(Member).count()
 
         return {
@@ -206,14 +212,17 @@ def report_detail(
     bookings = db.query(Booking).filter(Booking.date_time.between(start_utc, end_utc)).all()
 
     def serialize_booking(b: Booking):
-        return {
-            "id": str(b.id),
-            "member_name": b.member.full_name if b.member else "Khách vãng lai",
-            "date_time": b.date_time,
-            "status": b.status.value,
-            "grand_total": b.grand_total,
-            "debt_note": b.debt_note,
-        }
+       return {
+    "id": str(b.id),
+    "member_name": b.member.full_name if b.member else "Khách vãng lai",
+    "date_time": b.date_time,
+    "status": b.status.value,
+    "grand_total": b.grand_total,
+    "amount_paid": b.amount_paid or 0,  # ✅ THÊM DÒNG NÀY
+    "discount": b.discount or 0,
+    "deposit_amount": b.deposit_amount or 0,
+    "debt_note": b.debt_note,
+}
 
     if type == "total":
         return [serialize_booking(b) for b in bookings]
