@@ -177,22 +177,33 @@ useEffect(() => {
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-       body: JSON.stringify({
-        services: services.map((s) => ({
-        id: crypto.randomUUID(),         // ✅ ID mới cho booking_service
-        service_id: s.id,                // ✅ ID gốc từ bảng services
-        name: s.name || "Không rõ",
-        unit_price: s.unit_price || 0,
+  body: JSON.stringify({
+  services: services
+    .map((s) => {
+      const matched = availableServices.find(
+        (a) => a.id === s.service_id || a.id === s.id || a.name === s.name
+      );
+      if (!matched) {
+        console.warn("❌ Dịch vụ không hợp lệ:", s.name);
+        return null;
+      }
+      return {
+        id: s.id || crypto.randomUUID(),
+        service_id: matched.id,
+        name: matched.name,
+        unit_price: matched.unit_price,
         quantity: s.quantity || 1,
-      })),
-          grand_total: grandTotal,
-          payment_method: paymentMethod,
-          discount,
-          amount_paid: paid,
-          debt_amount: debtAmount,
-          debt_note: debtNote,
-          log: `Khách thanh toán ${paid.toLocaleString("vi-VN")}đ bằng ${paymentMethod}`,
-      })
+      };
+    })
+    .filter(Boolean),
+  grand_total: grandTotal,
+  payment_method: paymentMethod,
+  discount,
+  amount_paid: paid,
+  debt_amount: debtAmount,
+  debt_note: debtNote,
+  log: `Khách thanh toán ${paid.toLocaleString("vi-VN")}đ bằng ${paymentMethod}`,
+})
       }
     );
 
