@@ -179,8 +179,8 @@ useEffect(() => {
         headers: { "Content-Type": "application/json" },
        body: JSON.stringify({
         services: services.map((s) => ({
-        id: s.id || crypto.randomUUID(),
-        service_id: s.service_id || s.id,        // sẽ không lỗi nếu đã khai báo trong SelectedService
+        id: crypto.randomUUID(),         // ✅ ID mới cho booking_service
+        service_id: s.id,                // ✅ ID gốc từ bảng services
         name: s.name || "Không rõ",
         unit_price: s.unit_price || 0,
         quantity: s.quantity || 1,
