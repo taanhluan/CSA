@@ -168,52 +168,56 @@ useEffect(() => {
   // Khi hoàn tất booking, gửi kèm paymentMethod và discount
  const handleCompleteBooking = async () => {
   if (isReadOnly) return;
+
   const paid = amountPaid ?? grandTotal;
   const debtAmount = calculateDebtAmount(grandTotal, paid);
   const status = determineStatus(paid, grandTotal);
+
   try {
-    const res = await fetch(
-      `https://csa-backend-v90k.onrender.com/api/bookings/${booking.id}/complete`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-  services: services
-    .map((s) => {
+    const validServices = services.map((s) => {
       const matched = availableServices.find(
-        (a) => a.id === s.service_id || a.id === s.id || a.name === s.name
+        (a) => a.id === s.service_id || a.id === s.id
       );
+
       if (!matched) {
-        console.warn("❌ Dịch vụ không hợp lệ:", s.name);
-        return null;
+        throw new Error(`❌ Dịch vụ "${s.name}" không tồn tại trong danh sách hệ thống.`);
       }
+
       return {
-        id: s.id || crypto.randomUUID(),
+        id: s.id,
         service_id: matched.id,
         name: matched.name,
         unit_price: matched.unit_price,
         quantity: s.quantity || 1,
       };
-    })
-    .filter(Boolean),
-  grand_total: grandTotal,
-  payment_method: paymentMethod,
-  discount,
-  amount_paid: paid,
-  debt_amount: debtAmount,
-  debt_note: debtNote,
-  log: `Khách thanh toán ${paid.toLocaleString("vi-VN")}đ bằng ${paymentMethod}`,
-})
+    });
+
+    const res = await fetch(
+      `https://csa-backend-v90k.onrender.com/api/bookings/${booking.id}/complete`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          services: validServices,
+          grand_total: grandTotal,
+          payment_method: paymentMethod,
+          discount,
+          amount_paid: paid,
+          debt_amount: debtAmount,
+          debt_note: debtNote,
+          log: `Khách thanh toán ${paid.toLocaleString("vi-VN")}đ bằng ${paymentMethod}`,
+        }),
       }
     );
 
-      if (!res.ok) throw new Error("Failed to update booking");
+    if (!res.ok) throw new Error("Failed to update booking");
 
     toast.success("✅ Booking đã được cập nhật trạng thái!");
-    setLocalStatus(status); // ✅ cập nhật trạng thái trong local để cập nhật giao diện
+    setLocalStatus(status);
     localStorage.removeItem(storageKey);
-  } catch (err) {
-    toast.error("❌ Không thể cập nhật trạng thái");
+  } catch (err: any) {
+    toast.error(err.message || "❌ Không thể cập nhật trạng thái");
+    console.error(err);
   }
 };
 
