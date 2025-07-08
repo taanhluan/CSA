@@ -23,9 +23,14 @@ const AccessPage = () => {
   const { currentUser, setCurrentUser } = useAuth();
 
 useEffect(() => {
+  const currentPath = window.location.pathname;
+
   if (currentUser) {
+    // Nếu đang ở trang login thì điều hướng sau login
+    if (currentPath === "/access") return; // 👈 GIỮ ADMIN Ở TRANG ACCESS
+
     if (currentUser.role === "admin") {
-      navigate("/dashboard"); // hoặc "/"
+      navigate("/dashboard");
     } else if (currentUser.role === "staff") {
       navigate("/booking");
     }

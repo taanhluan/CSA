@@ -133,19 +133,20 @@ def complete_booking(booking_id: UUID, payload: BookingCompleteInput, db: Sessio
         if not booking:
             raise HTTPException(status_code=404, detail="Booking not found")
 
-    # Xóa dịch vụ cũ nếu có
-        if payload.services:
-           db.query(BookingService).filter(BookingService.booking_id == booking_id).delete()
+        # ✅ Chỉ xử lý khi payload.services tồn tại
+        if payload.services is not None:
+            db.query(BookingService).filter(BookingService.booking_id == booking_id).delete()
+            for s in payload.services:
+                db.add(BookingService(
+                    id=uuid4(),
+                    booking_id=booking_id,
+                    service_id=s.service_id,
+                    name=s.name,
+                    unit_price=s.unit_price,
+                    quantity=s.quantity
+                ))
 
-        for s in payload.services:
-            db.add(BookingService(
-            id=uuid4(),
-            booking_id=booking_id,
-            service_id=s.service_id,  # ✅ dùng đúng field service_id
-            name=s.name,
-            unit_price=s.unit_price,
-            quantity=s.quantity
-        ))
+        # ✅ Cập nhật thanh toán
         if payload.amount_paid is not None:
             booking.amount_paid = payload.amount_paid
             booking.status = BookingStatus.done if payload.amount_paid >= payload.grand_total else BookingStatus.partial
@@ -153,6 +154,7 @@ def complete_booking(booking_id: UUID, payload: BookingCompleteInput, db: Sessio
             booking.amount_paid = payload.grand_total
             booking.status = BookingStatus.done
 
+        # ✅ Cập nhật thông tin bổ sung
         booking.grand_total = payload.grand_total
         booking.discount = payload.discount
         booking.payment_method = payload.payment_method
@@ -165,10 +167,11 @@ def complete_booking(booking_id: UUID, payload: BookingCompleteInput, db: Sessio
 
         db.commit()
         return {"message": "Booking updated with payment, services, and status"}
-    
+
     except Exception as e:
         logger.error(f"❌ Error completing booking {booking_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
+
 
 # ------------------------------
 # Xoá booking nếu chưa thanh toán

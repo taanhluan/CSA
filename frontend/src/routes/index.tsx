@@ -12,8 +12,8 @@ import BookingSummaryPage from "../pages/BookingSummaryPage"; // ✅ thêm dòng
 function AppRoutes() {
   return (
     <Routes>
-      {/* Trang login không cần layout */}
-      <Route path="/access" element={<AccessPage />} />
+    
+      
 
       {/* Các route bên trong layout yêu cầu đăng nhập */}
       <Route
@@ -26,11 +26,11 @@ function AppRoutes() {
         {/* Có thể truy cập dashboard từ cả / và /dashboard */}
         <Route index element={<Dashboard />} />
         <Route path="/dashboard" element={<Dashboard />} />
-
         {/* Các route khác */}
         <Route path="/booking" element={<Booking />} />
         <Route path="/members" element={<Members />} />
         <Route path="/services" element={<Services />} />
+        <Route path="/access" element={<AccessPage />} />
       </Route>
     </Routes>
   );
