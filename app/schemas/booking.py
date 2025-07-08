@@ -93,7 +93,7 @@ class BookingResponse(BaseModel):
 # ------------------------------
 
 class BookingCompleteInput(BaseModel):
-    services: List[BookingServiceItem]
+    services: Optional[List[BookingServiceItem]] = None  # ✅ Cho phép không truyền
     grand_total: int
     discount: int
     payment_method: PaymentMethod

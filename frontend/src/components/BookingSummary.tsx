@@ -174,41 +174,74 @@ useEffect(() => {
   const status = determineStatus(paid, grandTotal);
 
   try {
-    const validServices = services.map((s) => {
-      const matched = availableServices.find(
-        (a) => a.id === s.service_id || a.id === s.id
-      );
+    const payload: any = {
+  grand_total: grandTotal,
+  payment_method: paymentMethod,
+  discount,
+  amount_paid: paid,
+  debt_amount: debtAmount,
+  debt_note: debtNote,
+  log: `Khách thanh toán ${paid.toLocaleString("vi-VN")}đ bằng ${paymentMethod}`,
+};
 
-      if (!matched) {
-        throw new Error(`❌ Dịch vụ "${s.name}" không tồn tại trong danh sách hệ thống.`);
-      }
+// 🧠 Chỉ gửi danh sách dịch vụ nếu có thay đổi
+const servicesChanged = (): boolean => {
+  if (!booking.services || booking.services.length !== services.length) return true;
 
-      return {
-        id: s.id,
-        service_id: matched.id,
-        name: matched.name,
-        unit_price: matched.unit_price,
-        quantity: s.quantity || 1,
-      };
-    });
+  const sortedCurrent = [...services].sort((a, b) => a.id.localeCompare(b.id));
+  const sortedOriginal = [...booking.services].sort((a: any, b: any) =>
+    (a.service_id || a.id).localeCompare(b.service_id || a.id)
+  );
 
-    const res = await fetch(
-      `https://csa-backend-v90k.onrender.com/api/bookings/${booking.id}/complete`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          services: validServices,
-          grand_total: grandTotal,
-          payment_method: paymentMethod,
-          discount,
-          amount_paid: paid,
-          debt_amount: debtAmount,
-          debt_note: debtNote,
-          log: `Khách thanh toán ${paid.toLocaleString("vi-VN")}đ bằng ${paymentMethod}`,
-        }),
-      }
+  for (let i = 0; i < sortedOriginal.length; i++) {
+    const current = sortedCurrent[i];
+    const original = sortedOriginal[i];
+    if (
+      current.service_id !== original.service_id &&
+      current.id !== original.service_id &&
+      current.id !== original.id
+    ) return true;
+
+    if (
+      Number(current.quantity) !== Number(original.quantity) ||
+      Number(current.unit_price) !== Number(original.unit_price)
+    ) return true;
+  }
+
+  return false;
+};
+
+if (servicesChanged()) {
+  const validServices = services.map((s) => {
+    const matched = availableServices.find(
+      (a) => a.id === s.service_id || a.id === s.id
     );
+
+    if (!matched) {
+      throw new Error(`❌ Dịch vụ "${s.name}" không tồn tại trong danh sách hệ thống.`);
+    }
+
+    return {
+      id: s.id,
+      service_id: matched.id,
+      name: matched.name,
+      unit_price: matched.unit_price,
+      quantity: s.quantity || 1,
+    };
+  });
+
+  payload.services = validServices;
+}
+
+const res = await fetch(
+  `https://csa-backend-v90k.onrender.com/api/bookings/${booking.id}/complete`,
+  {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  }
+);
+
 
     if (!res.ok) throw new Error("Failed to update booking");
 

@@ -133,19 +133,19 @@ def complete_booking(booking_id: UUID, payload: BookingCompleteInput, db: Sessio
         if not booking:
             raise HTTPException(status_code=404, detail="Booking not found")
 
-        # Xóa dịch vụ cũ nếu có
-        db.query(BookingService).filter(BookingService.booking_id == booking_id).delete()
+    # Xóa dịch vụ cũ nếu có
+        if payload.services:
+           db.query(BookingService).filter(BookingService.booking_id == booking_id).delete()
 
         for s in payload.services:
             db.add(BookingService(
-                id=uuid4(),
-                booking_id=booking_id,
-                service_id=s.id,
-                name=s.name,
-                unit_price=s.unit_price,
-                quantity=s.quantity
-            ))
-
+            id=uuid4(),
+            booking_id=booking_id,
+            service_id=s.service_id,  # ✅ dùng đúng field service_id
+            name=s.name,
+            unit_price=s.unit_price,
+            quantity=s.quantity
+        ))
         if payload.amount_paid is not None:
             booking.amount_paid = payload.amount_paid
             booking.status = BookingStatus.done if payload.amount_paid >= payload.grand_total else BookingStatus.partial
