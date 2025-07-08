@@ -6,16 +6,15 @@ import Services from "../pages/Services";
 import AccessPage from "../pages/AccessPage";
 import RequireAuth from "./RequireAuth";
 import DashboardLayout from "../layouts/DashboardLayout";
-import BookingSummaryPage from "../pages/BookingSummaryPage"; // ✅ thêm dòng này
-
+import BookingSummaryPage from "../pages/BookingSummaryPage"; // Nếu có
 
 function AppRoutes() {
   return (
     <Routes>
-    
-      
+      {/* ✅ KHÔNG cần đăng nhập để vào /access */}
+      <Route path="/access" element={<AccessPage />} />
 
-      {/* Các route bên trong layout yêu cầu đăng nhập */}
+      {/* ✅ Các route cần đăng nhập */}
       <Route
         element={
           <RequireAuth>
@@ -23,14 +22,12 @@ function AppRoutes() {
           </RequireAuth>
         }
       >
-        {/* Có thể truy cập dashboard từ cả / và /dashboard */}
         <Route index element={<Dashboard />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        {/* Các route khác */}
         <Route path="/booking" element={<Booking />} />
         <Route path="/members" element={<Members />} />
         <Route path="/services" element={<Services />} />
-        <Route path="/access" element={<AccessPage />} />
+        <Route path="/summary" element={<BookingSummaryPage />} /> {/* nếu có */}
       </Route>
     </Routes>
   );
