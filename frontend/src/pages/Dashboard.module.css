@@ -1,122 +1,138 @@
+/* === DASHBOARD WRAPPER === */
 .wrapper {
   padding: 2rem 1rem;
   background: linear-gradient(to bottom right, #f0f4f8, #ffffff);
   min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   box-sizing: border-box;
 }
 
-/* === HEADER === */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 2px solid #e5e7eb;
-  flex-wrap: wrap;
-  gap: 1rem;
+@media (prefers-color-scheme: dark) {
+  .wrapper {
+    background: linear-gradient(to bottom right, #1f2937, #111827);
+    color: #f3f4f6;
+  }
 }
 
+/* === HEADER === */
 .title {
   font-size: 2rem;
   font-weight: 700;
   color: #1e3a8a;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
   white-space: nowrap;
 }
 
-.timestamp {
-  font-size: 0.875rem;
-  color: #6b7280;
-  font-style: italic;
-}
-
-/* === FILTER === */
-.filterGroup {
+/* === FILTER SECTION === */
+.filters {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 1rem;
+  align-items: center;
   margin-bottom: 2rem;
 }
 
-@media (min-width: 640px) {
-  .filterGroup {
-    flex-direction: row;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-}
-
-.label {
+.filters label {
   font-weight: 600;
-  color: #374151;
   font-size: 0.875rem;
+  color: #374151;
 }
 
-.select,
-.dateInput {
+.filters select,
+.filters input[type="date"] {
   border: 1px solid #d1d5db;
   padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   background-color: white;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
   transition: border 0.2s ease, box-shadow 0.2s ease;
   font-size: 0.875rem;
 }
 
-.select:hover,
-.dateInput:hover {
+.filters select:hover,
+.filters input[type="date"]:hover,
+.filters select:focus,
+.filters input[type="date"]:focus {
   border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  outline: none;
 }
 
-/* === STATUS === */
-.loading {
-  color: #6b7280;
-  margin-bottom: 1rem;
-  font-style: italic;
-}
-
+/* === ERROR TEXT === */
 .error {
   color: #dc2626;
-  margin-bottom: 1rem;
   font-weight: 500;
+  margin-bottom: 1rem;
 }
 
-/* === GRID CARD === */
-.grid {
+/* === STATISTICS GRID === */
+.statsGrid {
   display: grid;
-  gap: 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  padding-bottom: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
 }
 
-.cardHover {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+/* === PIE CHART CONTAINER === */
+.chartContainer {
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  max-width: 768px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.cardHover:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+.chartContainer:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.07);
 }
 
-/* === MODAL === */
+/* === MODAL STYLING === */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
 .modalContent {
   padding: 1.5rem;
   border-radius: 1rem;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
   max-width: 90vw;
   overflow-x: auto;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
   animation: fadeIn 0.3s ease-in-out;
 }
 
-@media (max-width: 768px) {
-  .modalContent {
-    padding: 1rem;
-  }
+.closeButton {
+  margin-top: 1rem;
+  background-color: #ef4444;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
-/* === Animation === */
+.closeButton:hover {
+  background-color: #dc2626;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -126,26 +142,4 @@
     opacity: 1;
     transform: translateY(0);
   }
-}
-/* === PIE CHART === */
-.pieWrapper {
-  margin-top: 2.5rem;
-  background-color: white;
-  padding: 1.5rem;
-  border-radius: 1rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  max-width: 768px;
-  margin-left: auto;
-  margin-right: auto;
-  transition: all 0.3s ease;
-}
-
-.pieTitle {
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #1f2937;
 }

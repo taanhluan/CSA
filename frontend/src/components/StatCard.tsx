@@ -1,33 +1,33 @@
 import { ReactNode } from "react";
+import styles from "./StatCard.module.css";
 
 interface StatCardProps {
   title: string;
   value: string | number;
-  color?: string; // ví dụ: "bg-blue-500"
+  color?: string;
   icon?: ReactNode;
-  onClick?: () => void; // ✅ cho phép click
+  onClick?: () => void;
 }
 
 const StatCard = ({
   title,
   value,
-  color = "bg-blue-500",
+  color = "#3b82f6", // Màu nền mặc định (blue-500)
   icon,
   onClick,
 }: StatCardProps) => {
   return (
     <div
-      className={`flex items-center gap-4 p-6 rounded-2xl text-white shadow-xl transform transition-transform hover:scale-105 ${color} ${
-        onClick ? "cursor-pointer" : ""
-      }`}
+      className={`${styles.card} ${onClick ? styles.clickable : ""}`}
       onClick={onClick}
+      style={{ backgroundColor: color }}
     >
-      <div className="w-14 h-14 flex items-center justify-center bg-white/20 rounded-full backdrop-blur-sm text-3xl">
+      <div className={styles.iconContainer}>
         {icon || "📊"}
       </div>
-      <div className="flex flex-col">
-        <span className="text-sm font-medium opacity-90">{title}</span>
-        <span className="text-3xl font-bold tracking-tight">{value ?? "—"}</span>
+      <div className={styles.textGroup}>
+        <span className={styles.title}>{title}</span>
+        <span className={styles.value}>{value ?? "—"}</span>
       </div>
     </div>
   );

@@ -1,76 +1,116 @@
+/* === FORM WRAPPER === */
 .form {
-  background-color: white;
-  padding: 1rem;
-  border-radius: 0.75rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
   max-width: 500px;
   width: 100%;
+  margin-bottom: 2rem;
+  transition: box-shadow 0.3s ease;
 }
 
+.form:hover {
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* === FORM HEADING === */
 .heading {
-  font-size: 1.125rem;
-  font-weight: 600;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
   margin-bottom: 0.5rem;
 }
 
+/* === FORM INPUT === */
 .input {
-  padding: 0.5rem 0.75rem;
+  padding: 0.625rem 0.75rem;
   border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  font-size: 0.9rem;
+  border-radius: 0.625rem;
+  font-size: 0.95rem;
   width: 100%;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
 }
 
+.input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* === BUTTON === */
 .button {
   background-color: #2563eb;
   color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  font-size: 0.95rem;
-  font-weight: 500;
+  padding: 0.6rem 1.2rem;
+  border-radius: 0.625rem;
+  font-size: 1rem;
+  font-weight: 600;
   border: none;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .button:hover {
-  background-color: #1e40af;
+  background-color: #1d4ed8;
+  transform: translateY(-1px);
 }
 
+.button:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
+}
+
+/* === STATUS MESSAGES === */
 .success {
   color: #10b981;
   font-weight: 500;
+  font-size: 0.875rem;
   margin-top: 0.25rem;
 }
 
 .error {
   color: #ef4444;
   font-weight: 500;
+  font-size: 0.875rem;
   margin-top: 0.25rem;
 }
 
+/* === RESPONSIVE === */
 @media (max-width: 640px) {
   .form {
     padding: 1rem;
+    border-radius: 0.75rem;
   }
 }
 
+/* === DARK MODE (optional) === */
+@media (prefers-color-scheme: dark) {
+  .form {
+    background-color: #1f2937;
+    color: #f9fafb;
+    box-shadow: 0 8px 24px rgba(255, 255, 255, 0.03);
+  }
 
-form {
-  /* phần cũ */
-  background-color: white;
-  padding: 1rem;
-  border-radius: 0.75rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  max-width: 500px;
-  width: 100%;
+  .input {
+    background-color: #111827;
+    color: #f3f4f6;
+    border-color: #374151;
+  }
 
-  /* phần mới thêm để tách 2 khối */
-  margin-bottom: 2rem;
+  .input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  }
+
+  .button {
+    background-color: #3b82f6;
+  }
+
+  .button:hover {
+    background-color: #2563eb;
+  }
 }

@@ -1,38 +1,28 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Outlet } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
-import { Outlet } from "react-router-dom";
 import { Menu } from "lucide-react";
-import styles from "./DashboardLayout.module.css"; // CSS chứa toggleButton + overlay
+import styles from "./DashboardLayout.module.css";
+import { useAuth } from "../context/AuthContext"; // ✅
 
 const DashboardLayout = () => {
-  const [isAllowed, setIsAllowed] = useState(false);
+  const { currentUser } = useAuth(); // ✅ lấy từ context thay vì localStorage
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("currentUser");
-    if (!savedUser) {
-      navigate("/access");
-      return;
+    if (!currentUser) {
+      navigate("/login"); // ❗ Nếu chưa đăng nhập → về trang login
+    } else if (currentUser.role !== "admin" && currentUser.role !== "staff") {
+      navigate("/booking"); // ❗ Nếu role khác → redirect tránh lỗi
     }
+  }, [currentUser, navigate]);
 
-    const user = JSON.parse(savedUser);
-
-    // ✅ Cho phép cả admin và staff
-    if (user.role === "admin" || user.role === "staff") {
-      setIsAllowed(true);
-    } else {
-      navigate("/access");
-    }
-  }, [navigate]);
-
-  if (!isAllowed) return null;
+  if (!currentUser) return null; // ✅ tránh nhấp nháy giao diện khi chưa xác thực
 
   return (
     <div className="flex flex-col h-screen bg-gray-100 relative">
-      {/* Header nằm TRÊN sidebar */}
       <Header onToggleSidebar={() => setIsMobileMenuOpen(true)} />
 
       {/* Nút toggle ☰ trên mobile */}

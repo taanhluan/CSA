@@ -1,13 +1,20 @@
+/* === WRAPPER === */
 .summaryCard {
   background-color: #ffffff;
-  padding: 1.25rem;
+  padding: 1.5rem;
   border-radius: 1rem;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
   margin-top: 1rem;
+  transition: box-shadow 0.2s ease;
 }
 
+.summaryCard:hover {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+}
+
+/* === TITLE === */
 .title {
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: #4f46e5;
   display: flex;
@@ -17,6 +24,12 @@
   flex-wrap: wrap;
 }
 
+.title::before {
+  content: "🧾";
+  font-size: 1.1rem;
+}
+
+/* === ALERT / INFO === */
 .warning {
   font-size: 0.875rem;
   color: #92400e;
@@ -34,6 +47,7 @@
   margin-bottom: 1rem;
 }
 
+/* === ADD SERVICE INPUTS === */
 .addServiceRow {
   display: flex;
   flex-direction: column;
@@ -42,25 +56,27 @@
   margin-bottom: 1rem;
 }
 
-.select {
-  width: 100%;
+.select,
+.inputQty {
   padding: 0.5rem 0.75rem;
-  border-radius: 0.375rem;
+  border-radius: 0.5rem;
   border: 1px solid #d1d5db;
   background-color: #f9fafb;
   font-size: 0.9rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.select:focus,
+.inputQty:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 .inputQty {
-  width: 100%;
   text-align: center;
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  border: 1px solid #d1d5db;
-  font-size: 0.9rem;
 }
 
-/* Responsive: Trên 480px hiển thị input và select hàng ngang */
 @media (min-width: 480px) {
   .addServiceRow {
     flex-direction: row;
@@ -68,43 +84,55 @@
   }
 
   .inputQty {
-    width: 60px;
+    width: 70px;
   }
 }
 
+/* === TABLE === */
 .table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
   font-size: 0.9rem;
   border-radius: 0.5rem;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.table thead {
+  background-color: #f3f4f6;
 }
 
 .th {
-  padding: 0.6rem 0.75rem;
-  background-color: #f3f4f6;
-  text-align: left;
+  padding: 0.75rem;
   font-weight: 600;
+  text-align: left;
+  color: #374151;
 }
 
 .td {
-  padding: 0.6rem 0.75rem;
+  padding: 0.75rem;
   border-top: 1px solid #e5e7eb;
-  word-break: break-word;
+  background-color: #ffffff;
 }
 
+.table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+/* === TOTAL SUMMARY === */
 .total {
   margin-top: 1.5rem;
   border-top: 1px solid #e5e7eb;
   padding-top: 1rem;
   text-align: right;
-  font-size: 0.95rem;
-  color: #374151;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
   line-height: 1.6;
 }
 
+/* === BUTTON === */
 .confirmBtn {
   margin-top: 1.5rem;
   display: block;
@@ -112,20 +140,30 @@
   background: #8b5cf6;
   color: white;
   padding: 0.75rem;
-  font-weight: bold;
+  font-weight: 600;
   border-radius: 0.5rem;
   text-align: center;
-  transition: background 0.2s ease;
-}
-.confirmBtn:hover {
-  background: #7c3aed;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  border: none;
+  cursor: pointer;
 }
 
-/* Trạng thái thanh toán */
+.confirmBtn:hover {
+  background-color: #7c3aed;
+  transform: translateY(-1px);
+}
+
+.confirmBtn:disabled {
+  background-color: #d8b4fe;
+  cursor: not-allowed;
+}
+
+/* === PAYMENT STATUS === */
 .status-done {
   color: #16a34a;
   font-weight: bold;
 }
+
 .status-partial {
   color: #f97316;
   font-weight: bold;

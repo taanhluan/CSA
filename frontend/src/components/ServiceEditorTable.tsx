@@ -51,11 +51,9 @@ const ServiceEditorTable = ({ initialServices, categories, onUpdate }: Props) =>
       newValue = Number(newValue);
     }
 
-    // ✅ Sửa tại đây: không mutate trực tiếp mà dùng map()
     const updated = services.map((item, i) =>
       i === index ? { ...item, [key]: newValue } : item
     );
-
     setServices(updated);
     onUpdate(updated);
   };
@@ -67,58 +65,59 @@ const ServiceEditorTable = ({ initialServices, categories, onUpdate }: Props) =>
   };
 
   const removeRow = async (index: number) => {
-  const item = services[index];
+    const item = services[index];
+    if (item.id) {
+      const confirm = window.confirm("Bạn có chắc muốn xóa dịch vụ này?");
+      if (!confirm) return;
 
-  // ✅ Nếu item có ID (đã có trong DB), gọi API xóa
-  if (item.id) {
-    const confirm = window.confirm("Bạn có chắc muốn xóa dịch vụ này?");
-    if (!confirm) return;
-
-    try {
-      await deleteService(item.id);
-      toast.success("🗑️ Đã xóa dịch vụ khỏi hệ thống");
-    } catch (err) {
-      toast.error("❌ Không thể xóa dịch vụ từ server");
-      return; // ⛔ Dừng lại, không xóa khỏi FE nếu BE lỗi
+      try {
+        await deleteService(item.id);
+        toast.success("🗑️ Đã xóa dịch vụ khỏi hệ thống");
+      } catch (err) {
+        toast.error("Không thể xóa dịch vụ từ server");
+        return;
+      }
     }
-  }
 
-  // ✅ Xóa khỏi danh sách hiển thị
-  const updated = services.filter((_, i) => i !== index);
-  setServices(updated);
-  onUpdate(updated);
-};
+    const updated = services.filter((_, i) => i !== index);
+    setServices(updated);
+    onUpdate(updated);
+  };
 
   return (
-    <div className="p-4 bg-white rounded-xl shadow">
-      <h2 className="text-lg font-bold mb-4 text-indigo-700">📋 Danh sách dịch vụ</h2>
+    <div style={{ padding: "1rem", background: "#fff", borderRadius: "1rem", boxShadow: "0 4px 16px rgba(0,0,0,0.05)" }}>
+      <h2 style={{ fontSize: "1.125rem", fontWeight: "bold", marginBottom: "1rem", color: "#4f46e5" }}>
+        📋 Danh sách dịch vụ
+      </h2>
 
       {services.length === 0 ? (
-        <p className="text-gray-500 text-center py-4">⚠️ Không có dịch vụ nào để hiển thị.</p>
+        <p style={{ textAlign: "center", color: "#6b7280", padding: "1rem" }}>
+          ⚠️ Không có dịch vụ nào để hiển thị.
+        </p>
       ) : (
-        <table className="table-auto w-full border text-sm">
-          <thead className="bg-gray-100">
+        <table className={styles.table}>
+          <thead>
             <tr>
-              <th className="border px-3 py-2">Tên dịch vụ</th>
-              <th className="border px-3 py-2">Đơn giá (VNĐ)</th>
-              <th className="border px-3 py-2">Số lượng</th>
-              <th className="border px-3 py-2">Phân loại</th>
-              <th className="border px-3 py-2 text-center">Thao tác</th>
+              <th className={styles.th}>Tên dịch vụ</th>
+              <th className={styles.th}>Đơn giá (VNĐ)</th>
+              <th className={styles.th}>Số lượng</th>
+              <th className={styles.th}>Phân loại</th>
+              <th className={styles.th} style={{ textAlign: "center" }}>Thao tác</th>
             </tr>
           </thead>
           <tbody>
             {services.map((item, index) => (
               <tr key={item.id ?? index}>
-                <td className="border px-3 py-2">
+                <td className={styles.td}>
                   <input
                     type="text"
                     value={item.name}
                     onChange={(e) => handleChange(index, "name", e.target.value)}
-                    className="w-full px-2 py-1 border rounded"
+                    className={styles.input}
                   />
                 </td>
 
-                <td className="border px-3 py-2">
+                <td className={styles.td}>
                   <input
                     type="text"
                     value={item.unit_price.toLocaleString("vi-VN")}
@@ -127,28 +126,28 @@ const ServiceEditorTable = ({ initialServices, categories, onUpdate }: Props) =>
                       const clean = raw.replace(/^0+/, "");
                       handleChange(index, "unit_price", parseInt(clean || "0"));
                     }}
-                    className="w-full px-2 py-1 border rounded text-right"
+                    className={`${styles.input} ${styles["text-right"]}`}
                     inputMode="numeric"
                   />
                 </td>
 
-                <td className="border px-3 py-2">
+                <td className={styles.td}>
                   <input
                     type="number"
                     value={item.quantity}
                     onChange={(e) =>
                       handleChange(index, "quantity", parseInt(e.target.value || "0"))
                     }
-                    className="w-full px-2 py-1 border rounded text-right"
+                    className={`${styles.input} ${styles["text-right"]}`}
                     min={0}
                   />
                 </td>
 
-                <td className="border px-3 py-2">
+                <td className={styles.td}>
                   <select
                     value={item.category_id || ""}
                     onChange={(e) => handleChange(index, "category_id", e.target.value)}
-                    className="w-full px-2 py-1 border rounded"
+                    className={styles.select}
                   >
                     <option value="">-- Chọn nhóm --</option>
                     {categories.map((cat) => (
@@ -159,10 +158,10 @@ const ServiceEditorTable = ({ initialServices, categories, onUpdate }: Props) =>
                   </select>
                 </td>
 
-                <td className="border px-3 py-2 text-center">
+                <td className={styles.td} style={{ textAlign: "center" }}>
                   <button
                     onClick={() => removeRow(index)}
-                    className="text-red-600 text-sm hover:underline"
+                    className={styles["button-delete"]}
                   >
                     🗑️ Xoá
                   </button>
@@ -173,11 +172,8 @@ const ServiceEditorTable = ({ initialServices, categories, onUpdate }: Props) =>
         </table>
       )}
 
-      <div className="mt-4 text-left">
-        <button
-          onClick={addRow}
-          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm"
-        >
+      <div style={{ marginTop: "1rem", textAlign: "left" }}>
+        <button onClick={addRow} className={`${styles.button} ${styles["button-add"]}`}>
           ➕ Thêm dòng
         </button>
       </div>

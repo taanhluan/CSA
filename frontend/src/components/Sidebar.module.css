@@ -1,10 +1,10 @@
-/* Sidebar chính */
+/* === SIDEBAR WRAPPER === */
 .sidebar {
   width: 240px;
   height: 100vh;
-  background: linear-gradient(180deg, #1f2937, #111827); /* gradient tối */
+  background: linear-gradient(180deg, #1e293b, #111827); /* Dark cool gradient */
   color: white;
-  padding: 1rem;
+  padding: 1rem 0.75rem;
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -12,11 +12,11 @@
   left: 0;
   z-index: 200;
   overflow-y: auto;
-  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.2);
+  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.3);
   transition: transform 0.3s ease-in-out;
 }
 
-/* Ẩn sidebar mặc định ở mobile */
+/* === RESPONSIVE (MOBILE HIDDEN) === */
 @media (max-width: 768px) {
   .sidebar {
     transform: translateX(-100%);
@@ -27,50 +27,59 @@
   }
 }
 
-/* Logo / tiêu đề */
+/* === LOGO === */
 .logo {
   font-size: 1.5rem;
   font-weight: 700;
   text-align: center;
   margin-bottom: 2rem;
-  color: #f3f4f6;
+  color: #f8fafc;
+  letter-spacing: 0.04em;
 }
 
-/* Navigation container */
+/* === NAVIGATION LINKS === */
 .nav {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-/* Link style */
 .navLink {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.6rem 1rem;
-  border-radius: 0.5rem;
+  padding: 0.65rem 1rem;
+  border-radius: 0.75rem;
   text-decoration: none;
-  color: #d1d5db;
+  color: #cbd5e1; /* slate-300 */
   font-size: 0.95rem;
   font-weight: 500;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: all 0.2s ease-in-out;
+  position: relative;
 }
 
-/* Hover effect */
+.navLink svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+/* === HOVER EFFECT === */
 .navLink:hover {
-  background-color: #374151;
-  color: white;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  transform: translateX(2px);
 }
 
-/* Active link */
-.active {
-  background-color: #3b82f6;
-  color: white;
+/* === ACTIVE LINK === */
+.navLink.active {
+  background: linear-gradient(90deg, #3b82f6, #2563eb); /* Tailwind blue-500/600 */
+  color: #ffffff;
   font-weight: 600;
+  box-shadow: inset 4px 0 0 0 #facc15; /* yellow-400 highlight */
+  transform: none;
 }
 
-/* Toggle button for mobile */
+/* === TOGGLE BUTTON (MOBILE) === */
 .toggleButton {
   position: fixed;
   top: 1rem;
@@ -81,16 +90,18 @@
   border: none;
   font-size: 1.5rem;
   padding: 0.5rem 0.75rem;
-  border-radius: 0.375rem;
+  border-radius: 0.5rem;
   display: none;
+  cursor: pointer;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.2s ease;
 }
 
 .toggleButton:hover {
   background-color: #374151;
 }
 
-/* Overlay khi sidebar mở */
+/* === OVERLAY (MOBILE) === */
 .overlay {
   position: fixed;
   top: 0;
@@ -99,11 +110,21 @@
   width: 100vw;
   height: 100vh;
   background-color: rgba(0, 0, 0, 0.4);
+  animation: fadeIn 0.3s ease-in-out;
 }
 
-/* Responsive hiển thị nút toggle */
 @media (max-width: 768px) {
   .toggleButton {
     display: block;
+  }
+}
+
+/* === ANIMATIONS === */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }

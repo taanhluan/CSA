@@ -1,33 +1,88 @@
-import { Routes, Route } from "react-router-dom";
+import { Navigate, Routes, Route } from "react-router-dom";
+import { useAuth } from "../context/AuthContext"; // đảm bảo có
+import DashboardLayout from "../layouts/DashboardLayout";
 import Dashboard from "../pages/Dashboard";
 import Booking from "../pages/Booking";
 import Members from "../pages/Members";
 import Services from "../pages/Services";
+import BookingSummaryPage from "../pages/BookingSummaryPage";
 import AccessPage from "../pages/AccessPage";
-import RequireAuth from "./RequireAuth";
-import DashboardLayout from "../layouts/DashboardLayout";
-import BookingSummaryPage from "../pages/BookingSummaryPage"; // Nếu có
+import LoginPage from "../pages/LoginPage";
+import RoleBasedRoute from "./RoleBasedRoute";
 
 function AppRoutes() {
+  const { currentUser } = useAuth();
+
+  const IndexRedirect = () => {
+    if (!currentUser) return <Navigate to="/login" />;
+    if (currentUser.role === "admin") return <Navigate to="/dashboard" />;
+    if (currentUser.role === "staff") return <Navigate to="/booking" />;
+    return <Navigate to="/login" />;
+  };
+
   return (
     <Routes>
-      {/* ✅ KHÔNG cần đăng nhập để vào /access */}
-      <Route path="/access" element={<AccessPage />} />
+      <Route path="/login" element={<LoginPage />} />
 
-      {/* ✅ Các route cần đăng nhập */}
-      <Route
-        element={
-          <RequireAuth>
-            <DashboardLayout />
-          </RequireAuth>
-        }
-      >
-        <Route index element={<Dashboard />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/booking" element={<Booking />} />
-        <Route path="/members" element={<Members />} />
-        <Route path="/services" element={<Services />} />
-        <Route path="/summary" element={<BookingSummaryPage />} /> {/* nếu có */}
+      <Route element={<DashboardLayout />}>
+        <Route
+          path="/booking"
+          element={
+            <RoleBasedRoute allowedRoles={["admin", "staff"]}>
+              <Booking />
+            </RoleBasedRoute>
+          }
+        />
+        <Route
+          path="/summary"
+          element={
+            <RoleBasedRoute allowedRoles={["admin", "staff"]}>
+              <BookingSummaryPage />
+            </RoleBasedRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <RoleBasedRoute allowedRoles={["admin"]}>
+              <Dashboard />
+            </RoleBasedRoute>
+          }
+        />
+        <Route
+          path="/members"
+          element={
+            <RoleBasedRoute allowedRoles={["admin"]}>
+              <Members />
+            </RoleBasedRoute>
+          }
+        />
+        <Route
+          path="/services"
+          element={
+            <RoleBasedRoute allowedRoles={["admin"]}>
+              <Services />
+            </RoleBasedRoute>
+          }
+        />
+        <Route
+          path="/access"
+          element={
+            <RoleBasedRoute allowedRoles={["admin"]}>
+              <AccessPage />
+            </RoleBasedRoute>
+          }
+        />
+
+        {/* ✅ Route mặc định redirect theo vai trò */}
+        <Route
+          index
+          element={
+            <RoleBasedRoute allowedRoles={["admin", "staff"]}>
+              <IndexRedirect />
+            </RoleBasedRoute>
+          }
+        />
       </Route>
     </Routes>
   );

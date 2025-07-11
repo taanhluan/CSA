@@ -5,10 +5,16 @@
   max-height: 70vh;
   background: #ffffff;
   border-radius: 1rem;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
   padding: 1rem 1.5rem;
   margin-top: 1.5rem;
   border: 1px solid #e5e7eb;
+  scroll-behavior: smooth;
+  transition: box-shadow 0.3s ease;
+}
+
+.tableContainer:hover {
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
 }
 
 /* === Base Table === */
@@ -33,6 +39,7 @@
   position: sticky;
   top: 0;
   z-index: 2;
+  backdrop-filter: blur(4px);
 }
 
 /* === Table Cell === */
@@ -43,29 +50,29 @@
   vertical-align: middle;
   white-space: nowrap;
   background-color: #fff;
-  transition: background 0.3s;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* === Striping Row === */
-.table tbody tr:nth-child(odd) {
+.table tbody tr:nth-child(odd) td {
   background-color: #f9fafb;
 }
 
 /* === Hover Row === */
-.table tbody tr:hover {
-  background-color: #f0f9ff;
-  transition: background-color 0.3s ease;
+.table tbody tr:hover td {
+  background-color: #e0f2fe;
 }
 
-/* === Special Hover Row Highlight (custom class support) === */
-.hoverRow:hover {
-  background-color: #e0f2fe !important;
+/* === Special Hover Row Highlight (custom class) === */
+.hoverRow:hover td {
+  background-color: #bae6fd !important;
 }
 
 /* === Ghi chú công nợ mờ mờ === */
 .debtNote {
   font-style: italic;
   color: #9ca3af;
+  font-size: 0.85rem;
 }
 
 /* === Responsive Support === */
@@ -77,10 +84,45 @@
 
   .table th,
   .table td {
-    padding: 0.5rem;
+    padding: 0.5rem 0.75rem;
   }
 
   .tableContainer {
-    padding: 0.5rem;
+    padding: 0.75rem;
+  }
+}
+
+/* === Dark Mode (Optional) === */
+@media (prefers-color-scheme: dark) {
+  .tableContainer {
+    background: #1f2937;
+    border: 1px solid #374151;
+  }
+
+  .table {
+    color: #e5e7eb;
+  }
+
+  .table th {
+    background: linear-gradient(to right, #1e40af, #1e3a8a);
+    color: #ffffff;
+    border-bottom: 2px solid #475569;
+  }
+
+  .table td {
+    background-color: #111827;
+    border-bottom: 1px solid #374151;
+  }
+
+  .table tbody tr:nth-child(odd) td {
+    background-color: #1e293b;
+  }
+
+  .table tbody tr:hover td {
+    background-color: #334155;
+  }
+
+  .debtNote {
+    color: #94a3b8;
   }
 }
