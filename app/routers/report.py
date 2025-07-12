@@ -221,6 +221,7 @@ def report_detail(
     "amount_paid": b.amount_paid or 0,  # ✅ THÊM DÒNG NÀY
     "discount": b.discount or 0,
     "deposit_amount": b.deposit_amount or 0,
+    "debt_note": b.debt_note or "",  # ✅ đúng theo model
     "debt_note": b.debt_note,
 }
 
@@ -233,7 +234,11 @@ def report_detail(
     elif type == "partial":
         return [serialize_booking(b) for b in bookings if b.status == BookingStatus.partial]
     elif type == "debt":
-        return [serialize_booking(b) for b in bookings if b.status == BookingStatus.partial]
+        return [
+        serialize_booking(b)
+        for b in bookings
+        if b.status == BookingStatus.partial and (b.grand_total or 0) > (b.amount_paid or 0)
+                ]
     elif type == "revenue":
         return [serialize_booking(b) for b in bookings if b.status == BookingStatus.done]
     else:

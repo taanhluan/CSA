@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import StatCard from "../components/StatCard";
 import DetailsTable from "../components/DetailsTable";
 import styles from "./Dashboard.module.css";
+import { useNavigate } from "react-router-dom";
 import {
   PieChart,
   Pie,
@@ -14,6 +15,7 @@ import {
 type ReportType = "daily" | "weekly" | "monthly" | "quarterly" | "yearly";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [rangeType, setRangeType] = useState<ReportType>("daily");
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split("T")[0]
@@ -68,9 +70,31 @@ const Dashboard = () => {
 
   const fetchDetails = async (type: string, label: string) => {
     try {
+      if (type === "done") type = "completed";
       setDetailTitle(label);
       setDetailType(type);
       setModalOpen(true);
+
+      // ✅ Nếu type là "all", gọi nhiều API và gộp kết quả
+      if (type === "all") {
+        const typesToFetch = ["completed", "pending", "partial"];
+        const allResults = await Promise.all(
+          typesToFetch.map((t) => {
+            const params = new URLSearchParams({
+              type: t,
+              range: rangeType,
+              date: selectedDate,
+            });
+            return fetch(`${process.env.REACT_APP_API_URL}/reports/detail?${params.toString()}`)
+              .then((res) => res.json());
+          })
+        );
+        const mergedResults = allResults.flat();
+        setDetailData(mergedResults);
+        return;
+      }
+
+      // ✅ Nếu type hợp lệ bình thường
       const base = `${process.env.REACT_APP_API_URL}/reports/detail`;
       const params = new URLSearchParams({
         type,
@@ -164,52 +188,57 @@ const Dashboard = () => {
         <p className={styles.error}>{error}</p>
       ) : (
         <>
-        <div className={styles.statsGrid}>
-  <StatCard
-    title="Tổng booking"
-    value={stats.totalBookingsToday}
-    color="#60a5fa"
-    icon="📅"
-    onClick={() => fetchDetails("all", "Tất cả booking")}
-  />
-  <StatCard
-    title="Đã hoàn tất"
-    value={stats.completedBookingsToday}
-    color="#34d399"
-    icon="✅"
-    onClick={() => fetchDetails("done", "Đã thanh toán")}
-  />
-  <StatCard
-    title="Đang xử lý"
-    value={stats.pendingBookings}
-    color="#f87171"
-    icon="⏳"
-    onClick={() => fetchDetails("pending", "Chưa xử lý")}
-  />
-  <StatCard
-    title="Hội viên"
-    value={stats.membersCount}
-    color="#a78bfa"
-    icon="👥"
-    onClick={() => fetchDetails("members", "Danh sách hội viên")}
-  />
-  <StatCard
-    title="Thu nhập"
-    value={stats.revenueToday.toLocaleString("vi-VN") + "₫"}
-    color="#fbbf24"
-    icon="💰"
-    onClick={() => fetchDetails("revenue", "Báo cáo thu nhập")}
-  />
-  <StatCard
-    title="Booking thiếu"
-    value={stats.partialBookings}
-    color="#f472b6"
-    icon="🧾"
-    onClick={() => fetchDetails("partial", "Thiếu tiền")}
-  />
-</div>
-
-
+          <div className={styles.statsGrid}>
+            <StatCard
+              title="Hội viên"
+              value={stats.membersCount}
+              color="#a78bfa"
+              icon="👥"
+              onClick={() => fetchDetails("members", "Danh sách hội viên")}
+            />
+            <StatCard
+              title="Tổng booking"
+              value={stats.totalBookingsToday}
+              color="#60a5fa"
+              icon="📅"
+              onClick={() => fetchDetails("all", "Tất cả booking")}
+            />
+            <StatCard
+            title="Đã hoàn tất"
+            value={stats.completedBookingsToday}
+            color="#34d399"
+            icon="✅"
+            onClick={() => fetchDetails("completed", "Đã thanh toán")} // ✅ dùng type hợp lệ với backend
+            />
+            <StatCard
+              title="Đang xử lý"
+              value={stats.pendingBookings}
+              color="#f87171"
+              icon="⏳"
+              onClick={() => fetchDetails("pending", "Chưa xử lý")}
+            />
+            <StatCard
+              title="Booking thiếu"
+              value={stats.partialBookings}
+              color="#f472b6"
+              icon="🧾"
+              onClick={() => fetchDetails("partial", "Thiếu tiền")}
+            />
+            <StatCard
+            title="Công nợ"
+            value={stats.totalDebt.toLocaleString("vi-VN") + "₫"}
+            color="#fb7185" // đỏ hồng
+            icon="📌"
+            onClick={() => navigate("/debt")} // ✅ Redirect sang DebtPage
+          />
+            <StatCard
+              title="Thu nhập"
+              value={stats.revenueToday.toLocaleString("vi-VN") + "₫"}
+              color="#fbbf24"
+              icon="💰"
+              onClick={() => fetchDetails("revenue", "Báo cáo thu nhập")}
+            />
+          </div>
 
           <div className={styles.chartContainer}>
             <ResponsiveContainer width="100%" height={300}>
@@ -227,7 +256,6 @@ const Dashboard = () => {
         </>
       )}
 
-      {/* Modal hiển thị bảng chi tiết nếu có */}
       {modalOpen && (
         <div className={styles.modalOverlay} onClick={() => setModalOpen(false)}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>

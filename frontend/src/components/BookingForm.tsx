@@ -235,7 +235,7 @@ const BookingForm = () => {
               >
                 <option value="">Tất cả</option>
                 <option value="booked">Đã đặt</option>
-                <option value="checked-in">Đã check-in</option>
+                <option value="partial">Thanh toán chưa đủ</option>
                 <option value="done">Hoàn tất</option>
               </select>
             </div>

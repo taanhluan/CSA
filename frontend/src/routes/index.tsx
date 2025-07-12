@@ -1,5 +1,5 @@
 import { Navigate, Routes, Route } from "react-router-dom";
-import { useAuth } from "../context/AuthContext"; // đảm bảo có
+import { useAuth } from "../context/AuthContext";
 import DashboardLayout from "../layouts/DashboardLayout";
 import Dashboard from "../pages/Dashboard";
 import Booking from "../pages/Booking";
@@ -9,6 +9,7 @@ import BookingSummaryPage from "../pages/BookingSummaryPage";
 import AccessPage from "../pages/AccessPage";
 import LoginPage from "../pages/LoginPage";
 import RoleBasedRoute from "./RoleBasedRoute";
+import DebtPage from "../pages/DebtPage"; // ✅ Thêm dòng này
 
 function AppRoutes() {
   const { currentUser } = useAuth();
@@ -70,6 +71,14 @@ function AppRoutes() {
           element={
             <RoleBasedRoute allowedRoles={["admin"]}>
               <AccessPage />
+            </RoleBasedRoute>
+          }
+        />
+        <Route
+          path="/debt"
+          element={
+            <RoleBasedRoute allowedRoles={["admin"]}>
+              <DebtPage />
             </RoleBasedRoute>
           }
         />
