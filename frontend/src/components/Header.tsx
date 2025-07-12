@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import styles from "./Header.module.css";
 import { UserCircle2, Menu } from "lucide-react"; // ✅ thêm Menu icon
+import logoTK from "../assets/logo.jpg"; // ✅ Import logo
 
 interface HeaderProps {
   onToggleSidebar: () => void; // ✅ thêm prop để mở sidebar
@@ -44,10 +45,14 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
       </button>
 
       {/* Logo & tiêu đề */}
-      <div className={styles.logoArea}>
-        <img src="/logo192.png" alt="CSA" className={styles.logo} />
-        <h1 className={styles.title}>CSA Dashboard</h1>
-      </div>
+<div className={styles.logoArea}>
+  <img
+    src={logoTK}
+    alt="TK Basketball Logo"
+    className={styles.logo}
+  />
+  <h1 className={styles.title}>TK - Basketball Court</h1>
+</div>
 
       {/* Avatar và dropdown */}
       <div className={styles.accountSection}>

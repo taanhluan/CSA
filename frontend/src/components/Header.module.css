@@ -1,15 +1,21 @@
 .header {
-  position: relative; /* hoặc sticky nếu muốn luôn trên đầu */
-  z-index: 50;         /* Lớn hơn z-index của sidebar */
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 1.5rem;
-  background-color: white;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
   position: sticky;
   top: 0;
   z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background-color: white;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+  transition: padding-left 0.3s ease;
+  height: 72px;
+}
+
+@media (min-width: 768px) {
+  .header {
+    padding-left: 256px;
+  }
 }
 
 .logoArea {
@@ -19,16 +25,30 @@
 }
 
 .logo {
-  height: 32px;
-  width: 32px;
+  height: 48px;
+  width: 48px;
+  border-radius: 9999px;
+  object-fit: cover;
+  border: 2px solid #fb923c;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.logo:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
 }
 
 .title {
   font-size: 1.25rem;
-  font-weight: 600;
-  color: #1f2937;
+  font-weight: 800;
+  color: #fb923c;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
+/* Avatar & Dropdown */
 .accountSection {
   position: relative;
   display: flex;
@@ -53,7 +73,7 @@
   border: 1px solid #e5e7eb;
   border-radius: 0.5rem;
   padding: 0.75rem;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
   text-align: right;
   width: 180px;
 }
@@ -86,17 +106,7 @@
   background-color: #dc2626;
 }
 
-@media (max-width: 640px) {
-  .title {
-    font-size: 1rem;
-  }
-
-  .logo {
-    height: 28px;
-    width: 28px;
-  }
-}
-
+/* Menu icon (mobile) */
 .menuButton {
   background: transparent;
   border: none;
@@ -111,9 +121,13 @@
   color: #111827;
 }
 
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .menuButton {
     display: block;
   }
-}
 
+  .title {
+    font-size: 1rem;
+  }
+}

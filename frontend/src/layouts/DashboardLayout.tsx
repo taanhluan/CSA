@@ -4,36 +4,41 @@ import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 import { Menu } from "lucide-react";
 import styles from "./DashboardLayout.module.css";
-import { useAuth } from "../context/AuthContext"; // ✅
+import { useAuth } from "../context/AuthContext";
 
 const DashboardLayout = () => {
-  const { currentUser } = useAuth(); // ✅ lấy từ context thay vì localStorage
+  const { currentUser } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
+  // Redirect nếu chưa đăng nhập
   useEffect(() => {
     if (!currentUser) {
-      navigate("/login"); // ❗ Nếu chưa đăng nhập → về trang login
+      navigate("/login");
     } else if (currentUser.role !== "admin" && currentUser.role !== "staff") {
-      navigate("/booking"); // ❗ Nếu role khác → redirect tránh lỗi
+      navigate("/booking");
     }
   }, [currentUser, navigate]);
 
-  if (!currentUser) return null; // ✅ tránh nhấp nháy giao diện khi chưa xác thực
+  // Khóa scroll body khi mở sidebar mobile
+  useEffect(() => {
+    document.body.style.overflow = isMobileMenuOpen ? "hidden" : "auto";
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [isMobileMenuOpen]);
+
+  if (!currentUser) return null;
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100 relative">
-      <Header onToggleSidebar={() => setIsMobileMenuOpen(true)} />
+    <div className="flex h-screen bg-gray-100 relative">
+      {/* Sidebar cố định trái */}
+      <Sidebar
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+      />
 
-      {/* Nút toggle ☰ trên mobile */}
-      <button
-        className={`${styles.toggleButton} md:hidden`}
-        onClick={() => setIsMobileMenuOpen(true)}
-      >
-        <Menu />
-      </button>
-
-      {/* Overlay khi mở sidebar mobile */}
+      {/* Overlay mobile */}
       {isMobileMenuOpen && (
         <div
           className={styles.overlay}
@@ -41,17 +46,16 @@ const DashboardLayout = () => {
         />
       )}
 
-      {/* Sidebar cố định trái */}
-      <Sidebar
-        isOpen={isMobileMenuOpen}
-        onClose={() => setIsMobileMenuOpen(false)}
-      />
+      {/* Phần chính */}
+      <div className="flex flex-col flex-1">
+        <Header onToggleSidebar={() => setIsMobileMenuOpen(true)} />
 
-      {/* Nội dung chính */}
-      <div className="flex flex-1 overflow-hidden md:ml-64">
-        <main className="flex-1 overflow-y-auto p-4 bg-gray-50">
-          <Outlet />
-        </main>
+        {/* ✅ Ẩn main khi sidebar mở trên mobile */}
+        {!isMobileMenuOpen && (
+          <main className="flex-1 overflow-y-auto p-4 bg-gray-50 md:pl-64 transition-all duration-300">
+            <Outlet />
+          </main>
+        )}
       </div>
     </div>
   );

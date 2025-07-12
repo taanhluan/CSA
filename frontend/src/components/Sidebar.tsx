@@ -29,7 +29,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           </button>
         </div>
 
-        <div className={styles.logo}>🏀 CSA System</div>
+        <div className={styles.logo}>TK🏀Court</div>
 
         <nav className={styles.nav}>
           <NavLink to="/booking" className={getLinkClass}>
@@ -49,7 +49,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         </button>
       </div>
 
-      <div className={styles.logo}>🏀 CSA System</div>
+      <div className={styles.logo}>TK🏀Court</div>
 
       <nav className={styles.nav}>
         <NavLink to="/" className={getLinkClass}>
