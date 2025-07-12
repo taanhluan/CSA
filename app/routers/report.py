@@ -154,8 +154,8 @@ def report_summary(
 @router.get("/detail")
 def report_detail(
     type: str = Query(..., description="total, pending, completed, partial, debt, members, revenue"),
-    range: str = Query(..., description="daily, weekly, monthly, quarterly, yearly"),
-    date: str = Query(...),
+    range: str = Query(..., description="daily, weekly, monthly, quarterly, yearly, to-date"),
+    date_str: Optional[str] = None,
     week: Optional[int] = None,
     month: Optional[int] = None,
     quarter: Optional[int] = None,
@@ -163,10 +163,18 @@ def report_detail(
     db: Session = Depends(get_db),
 ):
     local_tz = pytz.timezone("Asia/Ho_Chi_Minh")
-    day = datetime.strptime(date, "%Y-%m-%d").date()
 
     # === Lấy thời gian theo range ===
-    if range == "daily":
+    if range == "to-date":
+        today = datetime.now(local_tz).date()
+        start_date = datetime(today.year, 1, 1)
+        end_date = datetime.now(local_tz)
+        start_local = local_tz.localize(datetime.combine(start_date, time.min))
+        end_local = end_date
+    elif range == "daily":
+        if not date_str:
+            raise HTTPException(status_code=400, detail="Missing date")
+        day = datetime.strptime(date_str, "%Y-%m-%d").date()
         start_local = local_tz.localize(datetime.combine(day, time.min))
         end_local = local_tz.localize(datetime.combine(day, time.max))
     elif range == "weekly":
@@ -212,18 +220,17 @@ def report_detail(
     bookings = db.query(Booking).filter(Booking.date_time.between(start_utc, end_utc)).all()
 
     def serialize_booking(b: Booking):
-       return {
-    "id": str(b.id),
-    "member_name": b.member.full_name if b.member else "Khách vãng lai",
-    "date_time": b.date_time,
-    "status": b.status.value,
-    "grand_total": b.grand_total,
-    "amount_paid": b.amount_paid or 0,  # ✅ THÊM DÒNG NÀY
-    "discount": b.discount or 0,
-    "deposit_amount": b.deposit_amount or 0,
-    "debt_note": b.debt_note or "",  # ✅ đúng theo model
-    "debt_note": b.debt_note,
-}
+        return {
+            "id": str(b.id),
+            "member_name": b.member.full_name if b.member else "Khách vãng lai",
+            "date_time": b.date_time,
+            "status": b.status.value,
+            "grand_total": b.grand_total,
+            "amount_paid": b.amount_paid or 0,
+            "discount": b.discount or 0,
+            "deposit_amount": b.deposit_amount or 0,
+            "debt_note": b.debt_note or "",
+        }
 
     if type == "total":
         return [serialize_booking(b) for b in bookings]
@@ -234,11 +241,7 @@ def report_detail(
     elif type == "partial":
         return [serialize_booking(b) for b in bookings if b.status == BookingStatus.partial]
     elif type == "debt":
-        return [
-        serialize_booking(b)
-        for b in bookings
-        if b.status == BookingStatus.partial and (b.grand_total or 0) > (b.amount_paid or 0)
-                ]
+        return [serialize_booking(b) for b in bookings if b.status == BookingStatus.partial and (b.grand_total or 0) > (b.amount_paid or 0)]
     elif type == "revenue":
         return [serialize_booking(b) for b in bookings if b.status == BookingStatus.done]
     else:
