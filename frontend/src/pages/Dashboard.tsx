@@ -83,7 +83,7 @@ const Dashboard = () => {
             const params = new URLSearchParams({
               type: t,
               range: rangeType,
-              date: selectedDate,
+              date_str: selectedDate,
             });
             return fetch(`${process.env.REACT_APP_API_URL}/reports/detail?${params.toString()}`)
               .then((res) => res.json());
@@ -99,7 +99,7 @@ const Dashboard = () => {
       const params = new URLSearchParams({
         type,
         range: rangeType,
-        date: selectedDate,
+        date_str: selectedDate,
       });
       const res = await fetch(`${base}?${params.toString()}`);
       const data = await res.json();
