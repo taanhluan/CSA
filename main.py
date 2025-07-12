@@ -20,6 +20,7 @@ origins = [
     "https://csa-taanhluans-projects.vercel.app",  # Vercel
     "http://localhost:3000",  # Local dev
     "https://csa-beryl.vercel.app",  # Vercel phụ
+    "https://tkbasketball.vercel.app",
 ]
 
 app.add_middleware(
