@@ -5,13 +5,7 @@
   min-height: 100vh;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   box-sizing: border-box;
-}
-
-@media (prefers-color-scheme: dark) {
-  .wrapper {
-    background: linear-gradient(to bottom right, #1f2937, #111827);
-    color: #f3f4f6;
-  }
+  transition: background-color 0.3s ease;
 }
 
 /* === HEADER === */

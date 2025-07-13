@@ -1,3 +1,4 @@
+/* === HEADER WRAPPER === */
 .header {
   position: sticky;
   top: 0;
@@ -18,10 +19,13 @@
   }
 }
 
+/* === LOGO + TITLE === */
 .logoArea {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex-grow: 1;
+  min-width: 0; /* ✅ Cho phép con co giãn */
 }
 
 .logo {
@@ -46,15 +50,118 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex-shrink: 1;
 }
 
-/* Avatar & Dropdown */
+@media (max-width: 768px) {
+  .title {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .logo {
+    height: 36px;
+    width: 36px;
+  }
+
+  .title {
+    font-size: 0.9rem;
+    max-width: 120px;
+  }
+
+  .iconsWrapper {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 375px) {
+  .title {
+    font-size: 0.85rem;
+    max-width: 100px;
+  }
+
+  .logo {
+    height: 32px;
+    width: 32px;
+  }
+
+  .iconsWrapper {
+    gap: 6px;
+  }
+}
+
+/* === MENU ICON (MOBILE) === */
+.menuButton {
+  background: transparent;
+  border: none;
+  color: #374151;
+  font-size: 1.5rem;
+  margin-right: 1rem;
+  cursor: pointer;
+  display: none;
+}
+
+.menuButton:hover {
+  color: #111827;
+}
+
+@media (max-width: 768px) {
+  .menuButton {
+    display: block;
+  }
+}
+
+/* === ACCOUNT SECTION === */
 .accountSection {
   position: relative;
   display: flex;
   align-items: center;
 }
 
+/* === ICONS (Bell + Avatar) === */
+.iconsWrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* === BELL ICON === */
+.bell {
+  position: relative;
+  cursor: pointer;
+  color: #374151;
+  transition: color 0.3s ease;
+}
+
+.bell:hover {
+  color: #111827;
+}
+
+.bellIcon {
+  font-size: 1.5rem;
+  margin-top: 2px;
+}
+
+/* === BADGE ON BELL === */
+.badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background-color: #ef4444;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  box-shadow: 0 0 0 2px white;
+  line-height: 1;
+}
+
+/* === AVATAR === */
 .avatar {
   cursor: pointer;
   color: #374151;
@@ -65,6 +172,7 @@
   color: #111827;
 }
 
+/* === DROPDOWN === */
 .dropdown {
   position: absolute;
   top: 110%;
@@ -76,6 +184,7 @@
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
   text-align: right;
   width: 180px;
+  z-index: 10;
 }
 
 .name {
@@ -105,59 +214,3 @@
 .logout:hover {
   background-color: #dc2626;
 }
-
-/* Menu icon (mobile) */
-.menuButton {
-  background: transparent;
-  border: none;
-  color: #374151;
-  font-size: 1.5rem;
-  margin-right: 1rem;
-  cursor: pointer;
-  display: none;
-}
-
-.menuButton:hover {
-  color: #111827;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .menuButton {
-    display: block;
-  }
-
-  .title {
-    font-size: 1rem;
-  }
-}
-
-.bell {
-  position: relative;
-  margin-right: 1rem;
-  cursor: pointer;
-  color: #374151;
-  transition: color 0.3s ease;
-}
-
-.bell:hover {
-  color: #111827;
-}
-
-.bellIcon {
-  font-size: 1.5rem;
-}
-
-.badge {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  background-color: #ef4444; /* red-500 */
-  color: white;
-  font-size: 0.7rem;
-  font-weight: bold;
-  padding: 2px 5px;
-  border-radius: 9999px;
-  box-shadow: 0 0 0 2px white;
-}
-

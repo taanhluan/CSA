@@ -2,16 +2,15 @@ import { useEffect, useState } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
-import { Menu } from "lucide-react";
-import styles from "./DashboardLayout.module.css";
 import { useAuth } from "../context/AuthContext";
+import styles from "./DashboardLayout.module.css";
 
 const DashboardLayout = () => {
   const { currentUser } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
-  // Redirect nếu chưa đăng nhập
+  // Nếu chưa đăng nhập thì điều hướng
   useEffect(() => {
     if (!currentUser) {
       navigate("/login");
@@ -20,7 +19,7 @@ const DashboardLayout = () => {
     }
   }, [currentUser, navigate]);
 
-  // Khóa scroll body khi mở sidebar mobile
+  // Khóa scroll khi mở sidebar mobile
   useEffect(() => {
     document.body.style.overflow = isMobileMenuOpen ? "hidden" : "auto";
     return () => {
@@ -31,14 +30,14 @@ const DashboardLayout = () => {
   if (!currentUser) return null;
 
   return (
-    <div className="flex h-screen bg-gray-100 relative">
-      {/* Sidebar cố định trái */}
+    <div className="flex min-h-screen relative">
+      {/* Sidebar */}
       <Sidebar
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
       />
 
-      {/* Overlay mobile */}
+      {/* Overlay khi sidebar mobile mở */}
       {isMobileMenuOpen && (
         <div
           className={styles.overlay}
@@ -46,16 +45,16 @@ const DashboardLayout = () => {
         />
       )}
 
-      {/* Phần chính */}
-      <div className="flex flex-col flex-1">
+      {/* Nội dung chính */}
+      <div className="flex flex-col flex-1 min-h-screen">
         <Header onToggleSidebar={() => setIsMobileMenuOpen(true)} />
 
-        {/* ✅ Ẩn main khi sidebar mở trên mobile */}
-        {!isMobileMenuOpen && (
-          <main className="flex-1 overflow-y-auto p-4 bg-gray-50 md:pl-64 transition-all duration-300">
-            <Outlet />
-          </main>
-        )}
+        {/* Main content: đảm bảo padding bên trái trên desktop để tránh bị đè bởi sidebar */}
+        <main
+          className={`${styles.mainContent} transition-all duration-300`}
+        >
+          <Outlet />
+        </main>
       </div>
     </div>
   );

@@ -2,6 +2,7 @@
 import React from "react";
 import styles from "./DetailsTable.module.css";
 
+
 interface Props {
   detailData: any[];
   detailType: string;

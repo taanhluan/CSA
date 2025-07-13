@@ -1,4 +1,4 @@
-/* Toggle menu button (☰) on mobile */
+/* === TOGGLE MENU BUTTON (☰) ON MOBILE === */
 .toggleButton {
   position: fixed;
   top: 1rem;
@@ -26,7 +26,7 @@
   }
 }
 
-/* Overlay đen khi mở sidebar (mobile) */
+/* === OVERLAY KHI MỞ SIDEBAR (MOBILE) === */
 .overlay {
   position: fixed;
   top: 0;
@@ -36,9 +36,19 @@
   height: 100vh;
   background-color: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(2px); /* mờ nền nhẹ */
+  animation: fadeIn 0.3s ease-in-out;
 }
 
-/* Sidebar animation (optional) */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* === SIDEBAR (TRÊN MOBILE) === */
 .sidebar {
   position: fixed;
   top: 0;
@@ -55,14 +65,17 @@
   transform: translateX(0);
 }
 
-/* Đẩy nội dung chính khi sidebar mở */
+/* === PHẦN NỘI DUNG CHÍNH === */
 .mainContent {
   flex: 1;
   overflow-y: auto;
   padding: 1rem;
   background-color: #f9fafb;
+  min-height: 100vh;
+  transition: all 0.3s ease;
 }
 
+/* Trên desktop, đẩy content sang phải */
 @media (min-width: 768px) {
   .mainContent {
     padding-left: 256px; /* tránh bị đè dưới sidebar */

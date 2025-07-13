@@ -102,7 +102,7 @@
   color: #b91c1c;
 }
 
-/* === RESPONSIVE === */
+/* === RESPONSIVE (TABLET) === */
 @media screen and (max-width: 768px) {
   .table {
     font-size: 0.82rem;
@@ -121,5 +121,50 @@
   .button {
     font-size: 0.82rem;
     padding: 0.4rem 0.75rem;
+  }
+}
+
+/* === RESPONSIVE (SMALL DEVICE <375px) === */
+@media screen and (max-width: 375px) {
+  .table {
+    font-size: 0.75rem;
+    box-shadow: none;
+  }
+
+  .th,
+  .td {
+    padding: 0.4rem 0.5rem;
+    font-size: 0.75rem;
+    word-break: break-word;
+  }
+
+  .td:first-child {
+    max-width: 120px;
+    word-break: break-word;
+  }
+
+  .td:last-child {
+    text-align: center;
+  }
+
+  .input,
+  .select {
+    font-size: 0.75rem;
+    padding: 0.45rem 0.6rem;
+  }
+
+  .button {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.6rem;
+  }
+
+  .button-add {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+
+  .button-delete {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.72rem;
   }
 }

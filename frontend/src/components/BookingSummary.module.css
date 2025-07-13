@@ -168,3 +168,122 @@
   color: #f97316;
   font-weight: bold;
 }
+
+/* ===== MOBILE-FIRST OPTIMIZATION ===== */
+
+@media (max-width: 480px) {
+  .summaryCard {
+    padding: 1rem;
+  }
+
+  .title {
+    font-size: 1.1rem;
+    gap: 0.3rem;
+    justify-content: flex-start;
+  }
+
+  .warning,
+  .info {
+    font-size: 0.85rem;
+    padding: 0.75rem;
+  }
+
+  .addServiceRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .inputQty {
+    width: 100%;
+  }
+
+  .table {
+    font-size: 0.85rem;
+    overflow-x: auto;
+  }
+
+  .th,
+  .td {
+    padding: 0.5rem;
+  }
+
+  .total {
+    font-size: 0.95rem;
+    text-align: left;
+  }
+
+  .confirmBtn {
+    font-size: 0.95rem;
+    padding: 0.6rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .title {
+    font-size: 1rem;
+  }
+
+  .warning,
+  .info {
+    font-size: 0.8rem;
+  }
+
+  .confirmBtn {
+    font-size: 0.9rem;
+    padding: 0.6rem;
+  }
+
+  .inputQty,
+  .select {
+    font-size: 0.85rem;
+    padding: 0.5rem 0.6rem;
+  }
+
+  .th,
+  .td {
+    font-size: 0.8rem;
+    padding: 0.4rem;
+  }
+}
+@media (max-width: 375px) {
+  .summaryCard {
+    padding: 1rem 0.75rem;
+  }
+
+  .table {
+    display: block;
+    overflow-x: auto;
+    width: 100%;
+  }
+
+  .table thead,
+  .table tbody,
+  .table tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  .th,
+  .td {
+    font-size: 0.8rem;
+    padding: 0.4rem;
+    word-wrap: break-word;
+  }
+
+  .total,
+  .status-done {
+    font-size: 0.85rem;
+  }
+
+  .confirmBtn {
+    font-size: 0.9rem;
+    padding: 0.6rem;
+  }
+
+  .title {
+    font-size: 1rem;
+    gap: 0.25rem;
+  }
+}
