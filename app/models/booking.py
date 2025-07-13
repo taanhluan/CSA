@@ -94,3 +94,5 @@ class BookingPlayer(Base):
     player_name = Column(String)
     is_leader = Column(Boolean, default=False)
     booking = relationship("Booking", back_populates="players")
+
+    from app.models import member

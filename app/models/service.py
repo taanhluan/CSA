@@ -19,3 +19,5 @@ class Service(Base):
     
     # Thiết lập relationship với bảng category
     category = relationship("ServiceCategory", back_populates="services")
+
+    from .category import ServiceCategory

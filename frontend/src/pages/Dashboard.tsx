@@ -110,33 +110,49 @@ const Dashboard = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const url = getApiUrl();
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`API failed: ${res.status}`);
-        const data = await res.json();
-        setStats({
-          totalBookingsToday: data.total_bookings || 0,
-          pendingBookings: data.pending_bookings || 0,
-          membersCount: data.members || 0,
-          completedBookingsToday: data.completed_bookings || 0,
-          revenueToday: data.revenue || 0,
-          partialBookings: data.partial_bookings || 0,
-          totalDebt: data.total_debt || 0,
-        });
-      } catch (err: any) {
-        setError(err.message || "Đã có lỗi khi tải dữ liệu.");
-      } finally {
-        setLoading(false);
-      }
-    };
+useEffect(() => {
+  const fetchStats = async () => {
+    setLoading(true);
+    setError("");
 
-    fetchStats();
-  }, [rangeType, selectedDate]);
+    try {
+      // Gọi API thống kê theo ngày/tuần/tháng
+      const url = getApiUrl();
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`API failed: ${res.status}`);
+      const data = await res.json();
+
+      // Gọi API công nợ toàn hệ thống đến hôm nay
+      const debtRes = await fetch(
+        `${process.env.REACT_APP_API_URL}/reports/detail?type=debt&range=to-date`
+      );
+      const debtData = await debtRes.json();
+
+      const totalDebt = Array.isArray(debtData)
+        ? debtData.reduce(
+            (sum, b) => sum + ((b.grand_total || 0) - (b.amount_paid || 0)),
+            0
+          )
+        : 0;
+
+      setStats({
+        totalBookingsToday: data.total_bookings || 0,
+        pendingBookings: data.pending_bookings || 0,
+        membersCount: data.members || 0,
+        completedBookingsToday: data.completed_bookings || 0,
+        revenueToday: data.revenue || 0,
+        partialBookings: data.partial_bookings || 0,
+        totalDebt: totalDebt, // ✅ tổng công nợ toàn hệ thống
+      });
+    } catch (err: any) {
+      setError(err.message || "Đã có lỗi khi tải dữ liệu.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchStats();
+}, [rangeType, selectedDate]);
 
   const pieData = useMemo(() => {
     return [

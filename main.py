@@ -1,4 +1,5 @@
 from fastapi import FastAPI, APIRouter
+from app.scheduler import start_scheduler
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base
 from app.models import booking, member, user, service  # Ensure all models loaded
@@ -13,6 +14,10 @@ from app.config import settings
 import os
 
 app = FastAPI(title="CSA API", version="1.0.0")
+
+@app.on_event("startup")
+def startup_event():
+    start_scheduler()  # ✅ khởi động scheduler khi FastAPI khởi động
 
 # ✅ CORS cho các frontend đang dùng
 origins = [
@@ -42,7 +47,6 @@ api_router.include_router(service_router.router)
 api_router.include_router(user_router.router)
 api_router.include_router(report_router.router)
 api_router.include_router(category_router.router)
-
 app.include_router(api_router)
 app.include_router(no_prefix_router)  # ✅ Để /api/login hoạt động
 

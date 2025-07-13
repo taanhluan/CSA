@@ -55,9 +55,22 @@ const DebtPage = () => {
     return Object.values(groupMap);
   }, [bookings]);
 
-  const totalDebt = useMemo(
-    () => groupedData.reduce((sum, g) => sum + g.total_debt, 0),
-    [groupedData]
+  const debtByMember: Record<string, any[]> = useMemo(() => {
+    const map: Record<string, any[]> = {};
+    bookings.forEach((b) => {
+      const key = b.member_name || "Không rõ";
+      if (!map[key]) map[key] = [];
+      const debt = (b.grand_total || 0) - (b.amount_paid || 0);
+      map[key].push({
+        ...b,
+        debt,
+      });
+    });
+    return map;
+  }, [bookings]);
+
+  const totalDebt = useMemo(() =>
+    groupedData.reduce((sum, g) => sum + g.total_debt, 0), [groupedData]
   );
 
   const handleReminder = async (memberName: string) => {
@@ -94,32 +107,49 @@ const DebtPage = () => {
             </strong>
           </div>
 
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Khách</th>
-                <th>Số lần nợ</th>
-                <th>Gần nhất</th>
-                <th>Tổng nợ</th>
-                <th>Ghi chú</th>
-                <th>🔔 Nhắc</th>
-              </tr>
-            </thead>
-            <tbody>
-              {groupedData.map((g) => (
-                <tr key={g.member_name}>
-                  <td>{g.member_name}</td>
-                  <td>{g.debt_count}</td>
-                  <td>{new Date(g.latest_date).toLocaleString("vi-VN")}</td>
-                  <td>{g.total_debt.toLocaleString("vi-VN")}₫</td>
-                  <td>{g.latest_note || "—"}</td>
-                  <td>
-                    <button onClick={() => handleReminder(g.member_name)}>Gửi</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className={styles.collapseList}>
+            {groupedData.map((g) => (
+              <details key={g.member_name} className={styles.groupBox}>
+                <summary className={styles.groupTitle}>
+                  <strong>{g.member_name}</strong> — 🧾 {g.total_debt.toLocaleString("vi-VN")}₫ ({g.debt_count} booking)
+                </summary>
+
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Ngày</th>
+                      <th>Tiền cần trả</th>
+                      <th>Đã trả</th>
+                      <th>Còn nợ</th>
+                      <th>Ghi chú</th>
+                      <th>Trạng thái</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {debtByMember[g.member_name]?.map((b, i) => {
+                      const isCleared = b.debt <= 0;
+                      return (
+                        <tr key={i} className={isCleared ? styles.cleared : ""}>
+                          <td>{new Date(b.date_time).toLocaleString("vi-VN")}</td>
+                          <td>{(b.grand_total || 0).toLocaleString("vi-VN")}₫</td>
+                          <td>{(b.amount_paid || 0).toLocaleString("vi-VN")}₫</td>
+                          <td>{b.debt.toLocaleString("vi-VN")}₫</td>
+                          <td>{b.debt_note || "—"}</td>
+                          <td>{isCleared ? "✅ Đã trả đủ" : "🕐 Còn thiếu"}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+
+                <div className={styles.reminderBar}>
+                  <button onClick={() => handleReminder(g.member_name)}>
+                    🔔 Gửi nhắc nợ
+                  </button>
+                </div>
+              </details>
+            ))}
+          </div>
         </>
       )}
     </div>
