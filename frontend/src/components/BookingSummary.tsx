@@ -351,7 +351,7 @@ const res = await fetch(
               </div>
             )}
 
-           {services.length > 0 && (
+{services.length > 0 && (
   <table className={styles.table}>
     <thead className="bg-gray-100 text-left">
       <tr>
