@@ -97,6 +97,8 @@
   border-radius: 0.5rem;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  table-layout: fixed; /* ✅ Cố định cột */
+  word-wrap: break-word;
 }
 
 .table thead {
@@ -220,33 +222,6 @@
 }
 
 @media (max-width: 375px) {
-  .title {
-    font-size: 1rem;
-  }
-
-  .warning,
-  .info {
-    font-size: 0.8rem;
-  }
-
-  .confirmBtn {
-    font-size: 0.9rem;
-    padding: 0.6rem;
-  }
-
-  .inputQty,
-  .select {
-    font-size: 0.85rem;
-    padding: 0.5rem 0.6rem;
-  }
-
-  .th,
-  .td {
-    font-size: 0.8rem;
-    padding: 0.4rem;
-  }
-}
-@media (max-width: 375px) {
   .summaryCard {
     padding: 1rem 0.75rem;
   }
@@ -272,6 +247,11 @@
     word-wrap: break-word;
   }
 
+  .title {
+    font-size: 1rem;
+    gap: 0.25rem;
+  }
+
   .total,
   .status-done {
     font-size: 0.85rem;
@@ -282,8 +262,9 @@
     padding: 0.6rem;
   }
 
-  .title {
-    font-size: 1rem;
-    gap: 0.25rem;
+  .inputQty,
+  .select {
+    font-size: 0.85rem;
+    padding: 0.5rem 0.6rem;
   }
 }
